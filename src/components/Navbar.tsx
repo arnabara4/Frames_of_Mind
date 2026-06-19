@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useAuth } from "@/components/AuthProvider";
 
 const LINKS = [
@@ -25,9 +26,18 @@ export default function Navbar() {
       <nav className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-6 md:px-10">
         <Link
           href="/"
-          className="font-display text-2xl font-extrabold text-coral transition-transform hover:scale-[1.03] md:text-[28px]"
+          className="group flex items-center gap-2.5 transition-transform hover:scale-[1.02]"
         >
-          Frames of Mind
+          <DotLottieReact
+            src="/lottifiles/october-go.lottie"
+            loop
+            autoplay
+            aria-hidden
+            className="h-11 w-11 shrink-0 md:h-12 md:w-12"
+          />
+          <span className="font-display text-2xl font-semibold text-coral md:text-[28px]">
+            Frames of Mind
+          </span>
         </Link>
 
         <div className="flex items-center gap-5 md:gap-8">

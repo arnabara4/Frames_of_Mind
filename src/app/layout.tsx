@@ -1,37 +1,31 @@
 import type { Metadata } from "next";
-import {
-  Playfair_Display,
-  Inter,
-  Inria_Serif,
-  Inknut_Antiqua,
-} from "next/font/google";
+import { Fraunces, Lora, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/components/AuthProvider";
 import LottieBackground from "@/components/LottieBackground";
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+// Display — soft, warm old-style serif. Carries the autumn-literary character.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
-  weight: ["400", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  style: ["normal", "italic"],
 });
 
+// Prose & quotes — calligraphic serif, tuned for comfortable on-screen reading.
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+});
+
+// UI — clean neutral sans for nav, meta, buttons.
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const inria = Inria_Serif({
-  variable: "--font-inria",
-  subsets: ["latin"],
-  weight: ["300", "400", "700"],
-});
-
-const inknut = Inknut_Antiqua({
-  variable: "--font-inknut",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -47,7 +41,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${inter.variable} ${inria.variable} ${inknut.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${lora.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <LottieBackground />

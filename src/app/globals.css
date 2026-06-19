@@ -17,10 +17,10 @@
   --color-cream: #fff8f1;
   --color-bark: #5a3a2a;
 
-  --font-display: var(--font-playfair);
+  --font-display: var(--font-fraunces);
   --font-body: var(--font-inter);
-  --font-serif: var(--font-inria);
-  --font-script: var(--font-inknut);
+  --font-serif: var(--font-lora);
+  --font-script: var(--font-fraunces);
 
   --shadow-warm: 0 18px 40px -24px rgba(156, 52, 21, 0.45);
 }
@@ -37,6 +37,8 @@ html {
 body {
   color: var(--foreground);
   font-family: var(--font-body), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   background-color: var(--background);
   /* Soft autumn wash — warm at the top, fading to cream. */
   background-image:
@@ -53,13 +55,20 @@ body {
   background-attachment: fixed;
 }
 
-/* Comfortable reading column for blog prose. */
+/* Display headings — soft Fraunces with optical sizing + gentle tightening. */
+.font-display {
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+}
+
+/* Comfortable reading column for blog prose — Lora serif. */
 .prose-fom {
+  font-family: var(--font-serif), Georgia, serif;
   max-width: 68ch;
-  font-size: 1.125rem;
-  line-height: 1.85;
-  letter-spacing: 0.003em;
-  color: rgba(43, 29, 22, 0.86);
+  font-size: 1.18rem;
+  line-height: 1.8;
+  letter-spacing: 0.001em;
+  color: rgba(43, 29, 22, 0.88);
 }
 .prose-fom p + p {
   margin-top: 1.25rem;
