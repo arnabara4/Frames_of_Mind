@@ -40,6 +40,7 @@ export interface AboutBlock {
   size: TextSize;
   img_width: ImgWidth;
   img_pct: number | null;
+  img_h: number | null;
   img_side: "left" | "right";
   position: number;
 }

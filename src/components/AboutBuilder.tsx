@@ -29,8 +29,9 @@ function blank(kind: AboutKind): DraftBlock {
     align: "left",
     font: kind === "heading" ? "display" : "serif",
     size: kind === "heading" ? "xl" : "md",
-    img_width: kind === "split" ? "md" : "md",
-    img_pct: kind === "split" ? 50 : null,
+    img_width: "md",
+    img_pct: kind === "split" ? 50 : kind === "image" ? 60 : null,
+    img_h: kind === "split" ? 256 : kind === "image" ? 288 : null,
     img_side: "left",
   };
 }
@@ -50,6 +51,7 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
       size: b.size,
       img_width: b.img_width,
       img_pct: b.img_pct,
+      img_h: b.img_h,
       img_side: b.img_side ?? "left",
     })),
   );
@@ -101,6 +103,7 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
         size: b.size,
         img_width: b.img_width,
         img_pct: b.img_pct,
+        img_h: b.img_h,
         img_side: b.img_side,
         position,
       }));
@@ -189,7 +192,7 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
                     index={i}
                     selected={selected === i}
                     onSelect={() => selectFromPreview(i)}
-                    onResize={(pct) => update(i, { ...b, img_pct: pct })}
+                    onResize={(pct, h) => update(i, { ...b, img_pct: pct, img_h: h })}
                   />
                 ))
               )}
@@ -237,7 +240,7 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
 }
 
 /** A preview block: click to select. Image/split blocks render a resizable
- *  image box with MS-Word-style corner/edge handles. */
+ *  image box with MS-Word-style corner + edge handles (width AND height). */
 function PreviewItem({
   block,
   index,
@@ -249,19 +252,15 @@ function PreviewItem({
   index: number;
   selected: boolean;
   onSelect: () => void;
-  onResize: (pct: number) => void;
+  onResize: (pct: number, h: number) => void;
 }) {
-  const isImage = block.kind === "image";
-  const isSplit = block.kind === "split";
-
   const wrapClass = `group relative cursor-pointer rounded-xl p-2 transition ${
     selected
       ? "bg-white/50 ring-2 ring-coral"
       : "hover:bg-white/30 hover:ring-1 hover:ring-coral/30"
   }`;
 
-  if (isImage) {
-    const pct = block.img_pct ?? 100;
+  if (block.kind === "image") {
     const justify =
       block.align === "left"
         ? "justify-start"
@@ -274,55 +273,38 @@ function PreviewItem({
           <ResizableImage
             src={block.image_url}
             seed={index}
-            pct={pct}
+            pct={block.img_pct ?? 100}
+            h={block.img_h ?? 288}
             selected={selected}
             onResize={onResize}
-            height="h-72"
           />
         </div>
       </div>
     );
   }
 
-  if (isSplit) {
-    const pct = block.img_pct ?? 50;
-    const text = (
-      <div
-        className={`min-w-0 flex-1 self-center whitespace-pre-wrap leading-relaxed text-bark/85 ${FONT_CLASS[block.font]} ${SIZE_CLASS[block.size]} ${ALIGN_CLASS[block.align]}`}
-      >
-        {renderRich(block.content) || (
-          <span className="text-ink/30">Text beside the image…</span>
-        )}
-      </div>
-    );
-    const img = (
-      <div style={{ flexBasis: `${pct}%` }} className="min-w-0 shrink-0">
-        <ResizableImage
-          src={block.image_url}
-          seed={index}
-          pct={pct}
-          selected={selected}
-          onResize={onResize}
-          side={block.img_side}
-          basisMode
-          height="h-64"
-        />
-      </div>
-    );
+  if (block.kind === "split") {
+    const floatCls =
+      block.img_side === "right" ? "float-right ml-6 mb-3" : "float-left mr-6 mb-3";
     return (
       <div onClick={onSelect} className={wrapClass}>
-        <div className="flex flex-col items-stretch gap-5 md:flex-row">
-          {block.img_side === "right" ? (
-            <>
-              {text}
-              {img}
-            </>
-          ) : (
-            <>
-              {img}
-              {text}
-            </>
-          )}
+        <div className="[display:flow-root]">
+          <ResizableImage
+            src={block.image_url}
+            seed={index}
+            pct={block.img_pct ?? 50}
+            h={block.img_h ?? 256}
+            selected={selected}
+            onResize={onResize}
+            floatClass={floatCls}
+          />
+          <div
+            className={`whitespace-pre-wrap leading-relaxed text-bark/85 ${FONT_CLASS[block.font]} ${SIZE_CLASS[block.size]} ${ALIGN_CLASS[block.align]}`}
+          >
+            {renderRich(block.content) || (
+              <span className="text-ink/30">Text wraps around the image…</span>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -335,62 +317,58 @@ function PreviewItem({
   );
 }
 
-const HANDLES: {
-  pos: string;
-  cursor: string;
-  sign: number;
-}[] = [
-  { pos: "-left-1.5 -top-1.5", cursor: "cursor-nwse-resize", sign: -1 },
-  { pos: "left-1/2 -top-1.5 -translate-x-1/2", cursor: "cursor-ns-resize", sign: 1 },
-  { pos: "-right-1.5 -top-1.5", cursor: "cursor-nesw-resize", sign: 1 },
-  { pos: "-right-1.5 top-1/2 -translate-y-1/2", cursor: "cursor-ew-resize", sign: 1 },
-  { pos: "-right-1.5 -bottom-1.5", cursor: "cursor-nwse-resize", sign: 1 },
-  { pos: "left-1/2 -bottom-1.5 -translate-x-1/2", cursor: "cursor-ns-resize", sign: 1 },
-  { pos: "-left-1.5 -bottom-1.5", cursor: "cursor-nesw-resize", sign: -1 },
-  { pos: "-left-1.5 top-1/2 -translate-y-1/2", cursor: "cursor-ew-resize", sign: -1 },
+// Each handle: position classes + which axes it drags (sx = width, sy = height).
+const HANDLES: { pos: string; cursor: string; sx: number; sy: number }[] = [
+  { pos: "-left-1.5 -top-1.5", cursor: "cursor-nwse-resize", sx: -1, sy: -1 },
+  { pos: "left-1/2 -top-1.5 -translate-x-1/2", cursor: "cursor-ns-resize", sx: 0, sy: -1 },
+  { pos: "-right-1.5 -top-1.5", cursor: "cursor-nesw-resize", sx: 1, sy: -1 },
+  { pos: "-right-1.5 top-1/2 -translate-y-1/2", cursor: "cursor-ew-resize", sx: 1, sy: 0 },
+  { pos: "-right-1.5 -bottom-1.5", cursor: "cursor-nwse-resize", sx: 1, sy: 1 },
+  { pos: "left-1/2 -bottom-1.5 -translate-x-1/2", cursor: "cursor-ns-resize", sx: 0, sy: 1 },
+  { pos: "-left-1.5 -bottom-1.5", cursor: "cursor-nesw-resize", sx: -1, sy: 1 },
+  { pos: "-left-1.5 top-1/2 -translate-y-1/2", cursor: "cursor-ew-resize", sx: -1, sy: 0 },
 ];
 
-/** Image with MS-Word-style selection handles. Dragging a handle resizes the
- *  image width as a percentage of its container. */
+/** Image with MS-Word selection handles. Corners + side edges resize width (%
+ *  of the container); top/bottom edges + corners resize height (px). Width is
+ *  clamped to 100% so the image always stays inside its container. */
 function ResizableImage({
   src,
   seed,
   pct,
+  h,
   selected,
   onResize,
-  side = "left",
-  basisMode = false,
-  height,
+  floatClass = "",
 }: {
   src: string | null;
   seed: number;
   pct: number;
+  h: number;
   selected: boolean;
-  onResize: (pct: number) => void;
-  side?: "left" | "right";
-  basisMode?: boolean;
-  height: string;
+  onResize: (pct: number, h: number) => void;
+  floatClass?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
-  function start(e: React.PointerEvent, sign: number) {
+  function start(e: React.PointerEvent, sx: number, sy: number) {
     e.preventDefault();
     e.stopPropagation();
     const wrap = ref.current;
     if (!wrap) return;
-    // Resize % is measured against: the split row (basisMode) or the image
-    // block's alignment row (image mode).
-    const container = basisMode
-      ? wrap.parentElement?.parentElement
-      : wrap.parentElement;
-    const pw = container?.getBoundingClientRect().width ?? 1;
+    const pw = wrap.parentElement?.getBoundingClientRect().width ?? 1;
     const startX = e.clientX;
+    const startY = e.clientY;
     const startPct = pct;
-    // A right-side split image grows when you drag its left edge outward.
-    const dir = basisMode && side === "right" ? -1 : 1;
+    const startH = h;
     const move = (ev: PointerEvent) => {
-      const dPct = ((ev.clientX - startX) / pw) * 100 * sign * dir;
-      onResize(Math.max(15, Math.min(100, Math.round(startPct + dPct))));
+      const nextPct = sx
+        ? Math.max(15, Math.min(100, Math.round(startPct + ((ev.clientX - startX) / pw) * 100 * sx)))
+        : startPct;
+      const nextH = sy
+        ? Math.max(96, Math.min(640, Math.round(startH + (ev.clientY - startY) * sy)))
+        : startH;
+      onResize(nextPct, nextH);
     };
     const up = () => {
       window.removeEventListener("pointermove", move);
@@ -403,22 +381,21 @@ function ResizableImage({
   return (
     <div
       ref={ref}
-      style={basisMode ? undefined : { width: `${pct}%` }}
-      className="group/img relative"
+      style={{ width: `${pct}%`, height: `${h}px`, maxWidth: "100%" }}
+      className={`group/img relative ${floatClass}`}
     >
-      <Thumb src={src} alt="About image" seed={seed} framed className={`${height} w-full`} />
+      <Thumb src={src} alt="About image" seed={seed} framed className="h-full w-full" />
 
-      {/* Selection outline + handles */}
       <div
         className={`pointer-events-none absolute inset-0 rounded-2xl transition ${
-          selected ? "ring-2 ring-coral" : "opacity-0 group-hover/img:opacity-100 ring-2 ring-coral/40"
+          selected ? "ring-2 ring-coral" : "opacity-0 ring-2 ring-coral/40 group-hover/img:opacity-100"
         }`}
       />
-      {HANDLES.map((h, i) => (
+      {HANDLES.map((hd, i) => (
         <span
           key={i}
-          onPointerDown={(e) => start(e, h.sign)}
-          className={`absolute ${h.pos} ${h.cursor} z-10 h-3 w-3 rounded-sm border-2 border-coral bg-white shadow transition ${
+          onPointerDown={(e) => start(e, hd.sx, hd.sy)}
+          className={`absolute ${hd.pos} ${hd.cursor} z-10 h-3 w-3 rounded-sm border-2 border-coral bg-white shadow transition ${
             selected ? "opacity-100" : "opacity-0 group-hover/img:opacity-100"
           }`}
         />

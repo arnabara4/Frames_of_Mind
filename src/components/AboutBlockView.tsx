@@ -18,6 +18,7 @@ export interface AboutView {
   size: TextSize;
   img_width: ImgWidth;
   img_pct: number | null;
+  img_h: number | null;
   img_side: "left" | "right";
 }
 
@@ -80,11 +81,15 @@ export default function AboutBlockView({
     case "image": {
       const justify =
         block.align === "left" ? "justify-start" : block.align === "right" ? "justify-end" : "justify-center";
-      const style = block.img_pct ? { width: `${block.img_pct}%` } : undefined;
+      const w = block.img_pct ? `${block.img_pct}%` : undefined;
+      const h = block.img_h ?? 288;
       return (
-        <div className={`flex ${justify}`}>
-          <div style={style} className={block.img_pct ? "" : `w-full ${IMG_WIDTH_CLASS[block.img_width]}`}>
-            <Thumb src={block.image_url} alt="About image" seed={index} framed className="h-72 w-full" />
+        <div className={`flex w-full ${justify}`}>
+          <div
+            style={{ width: w, height: h, maxWidth: "100%" }}
+            className={w ? "" : `w-full ${IMG_WIDTH_CLASS[block.img_width]}`}
+          >
+            <Thumb src={block.image_url} alt="About image" seed={index} framed className="h-full w-full" />
           </div>
         </div>
       );
@@ -92,29 +97,25 @@ export default function AboutBlockView({
 
     case "split": {
       const pct = block.img_pct ?? 50;
-      const img = (
-        <div style={{ flexBasis: `${pct}%` }} className="min-w-0 shrink-0">
-          <Thumb src={block.image_url} alt="About image" seed={index} framed className="h-64 w-full md:h-80" />
-        </div>
-      );
-      const text = (
-        <div className={`min-w-0 flex-1 ${font} ${size} self-center whitespace-pre-wrap leading-relaxed text-bark/85 ${align}`}>
-          {renderRich(block.content) || <span className="text-ink/30">Text beside the image…</span>}
-        </div>
-      );
+      const h = block.img_h ?? 256;
+      const floatCls =
+        block.img_side === "right"
+          ? "float-right ml-6 mb-3"
+          : "float-left mr-6 mb-3";
+      // flow-root contains the float so the text wraps around the image.
       return (
-        <div className="flex flex-col items-stretch gap-6 md:flex-row">
-          {block.img_side === "right" ? (
-            <>
-              {text}
-              {img}
-            </>
-          ) : (
-            <>
-              {img}
-              {text}
-            </>
-          )}
+        <div className="[display:flow-root]">
+          <div
+            style={{ width: `${pct}%`, height: h, maxWidth: "100%" }}
+            className={floatCls}
+          >
+            <Thumb src={block.image_url} alt="About image" seed={index} framed className="h-full w-full" />
+          </div>
+          <div className={`${font} ${size} whitespace-pre-wrap leading-relaxed text-bark/85 ${align}`}>
+            {renderRich(block.content) || (
+              <span className="text-ink/30">Text wraps around the image…</span>
+            )}
+          </div>
         </div>
       );
     }

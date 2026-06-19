@@ -21,6 +21,7 @@ export interface DraftBlock {
   size: TextSize;
   img_width: ImgWidth;
   img_pct: number | null;
+  img_h: number | null;
   img_side: "left" | "right";
 }
 
