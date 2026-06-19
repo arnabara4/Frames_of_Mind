@@ -10,12 +10,12 @@ const EXPLORE = [
 export default function Footer() {
   return (
     <footer className="relative mt-24 w-full overflow-hidden bg-gradient-to-br from-coral via-maple to-rust text-white">
-      {/* Giant background wordmark — bottom-anchored, intentionally clipped at the edges. */}
+      {/* Giant background wordmark — centered watermark spanning the footer, clipped at the edges. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 flex items-end justify-center"
+        className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center"
       >
-        <span className="translate-y-[18%] whitespace-nowrap font-display text-[26vw] font-black leading-none tracking-tight text-white/10 select-none">
+        <span className="whitespace-nowrap font-display text-[26vw] font-black leading-none tracking-tight text-white/10 select-none">
           Frames of Mind
         </span>
       </div>
@@ -23,8 +23,8 @@ export default function Footer() {
       {/* Soft top edge so the section blends from the page above. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-rust/30 to-transparent" />
 
-      {/* Foreground content */}
-      <div className="relative z-10 mx-auto max-w-[1440px] px-6 pb-44 pt-16 md:px-10 md:pb-56">
+      {/* Foreground content — layered directly over the wordmark */}
+      <div className="relative z-10 mx-auto max-w-[1440px] px-6 py-16 md:px-10 md:py-20">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-[1.5fr_1fr_1fr]">
           {/* Brand */}
           <div>
