@@ -323,7 +323,7 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
       ) : (
         <StaggerGrid
           key={`${query}-${month}-${year}-${page}`}
-          className="mt-10 grid grid-cols-1 items-start gap-8 md:grid-cols-2"
+          className="mt-10 grid grid-cols-1 items-start gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3"
         >
           {pageItems.map((b, i) => (
             <StaggerItem key={b.id} className="h-full">

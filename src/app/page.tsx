@@ -48,7 +48,7 @@ export default async function HomePage() {
             </Reveal>
 
             <Reveal delay={0.08}>
-              <h1 className="font-display text-5xl font-extrabold leading-[1.02] text-bark md:text-7xl">
+              <h1 className="font-display text-4xl font-extrabold leading-[1.04] text-bark sm:text-5xl md:text-7xl">
                 {c.title}
                 <br />
                 <span className="italic text-coral">{c.accent}</span>
