@@ -9,7 +9,7 @@ const EXPLORE = [
 
 export default function Footer() {
   return (
-    <footer className="relative mt-24 w-full overflow-hidden bg-gradient-to-br from-coral via-maple to-rust text-white">
+    <footer className="relative mt-24 w-full overflow-hidden bg-gradient-to-br from-coral via-maple to-rust text-white [contain-intrinsic-size:auto_460px] [content-visibility:auto]">
       {/* Giant background wordmark — centered watermark spanning the footer, clipped at the edges. */}
       <div
         aria-hidden
