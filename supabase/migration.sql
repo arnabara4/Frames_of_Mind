@@ -53,7 +53,8 @@ returns boolean
 language sql
 stable
 as $$
-  select coalesce(auth.jwt() ->> 'email', '') = 'pranavi@frame.com';
+  select coalesce(auth.jwt() ->> 'email', '') in
+    ('pranavi@frame.com', 'pranavisinghal2007@gmail.com');
 $$;
 
 -- blogs: public read, owner-only write

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import AboutBlockEditor, { type DraftBlock } from "@/components/AboutBlockEditor";
@@ -62,7 +63,15 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const editorRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Auto-dismiss the success toast.
+  useEffect(() => {
+    if (!saved) return;
+    const t = setTimeout(() => setSaved(false), 2600);
+    return () => clearTimeout(t);
+  }, [saved]);
 
   useEffect(() => {
     if (!loading && !owner) router.replace("/");
@@ -119,31 +128,30 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
   async function save() {
     setError(null);
     setSaving(true);
-    await supabase.from("about_blocks").delete().gte("position", 0);
-    if (blocks.length > 0) {
-      const rows = blocks.map((b, position) => ({
-        kind: b.kind,
-        content: b.kind === "image" || b.kind === "divider" ? null : b.content,
-        image_url: b.kind === "image" || b.kind === "split" ? b.image_url : null,
-        align: b.align,
-        font: b.font,
-        size: b.size,
-        img_width: b.img_width,
-        img_pct: b.img_pct,
-        img_h: b.img_h,
-        img_side: b.img_side,
-        text_x: b.text_x,
-        text_y: b.text_y,
-        position,
-      }));
-      const { error: err } = await supabase.from("about_blocks").insert(rows);
-      if (err) {
-        setSaving(false);
-        setError(err.message);
-        return;
-      }
+    const rows = blocks.map((b, position) => ({
+      kind: b.kind,
+      content: b.kind === "image" || b.kind === "divider" ? null : b.content,
+      image_url: b.kind === "image" || b.kind === "split" ? b.image_url : null,
+      align: b.align,
+      font: b.font,
+      size: b.size,
+      img_width: b.img_width,
+      img_pct: b.img_pct,
+      img_h: b.img_h,
+      img_side: b.img_side,
+      text_x: b.text_x,
+      text_y: b.text_y,
+      position,
+    }));
+    // Atomic replace — delete + insert run in one transaction, so a failure
+    // can never leave the page empty.
+    const { error: err } = await supabase.rpc("set_about_blocks", { blocks: rows });
+    setSaving(false);
+    if (err) {
+      setError(err.message);
+      return;
     }
-    router.push("/about");
+    setSaved(true);
     router.refresh();
   }
 
@@ -157,9 +165,18 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
 
   return (
     <div className="mx-auto max-w-[1500px] px-4 py-8 md:px-8">
-      <p className="mb-3 text-sm uppercase tracking-[0.25em] text-coral/70">
-        Editing the About page
-      </p>
+      <div className="mb-3 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => router.push("/about")}
+          className="inline-flex items-center gap-1.5 rounded-full border border-maple/20 bg-white/60 px-4 py-1.5 text-sm font-medium text-bark/70 transition hover:-translate-x-0.5 hover:border-coral hover:text-coral"
+        >
+          ← Back to About
+        </button>
+        <span className="text-sm uppercase tracking-[0.25em] text-coral/70">
+          Editing the About page
+        </span>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Editor */}
@@ -265,6 +282,26 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
           </div>
         </div>
       </div>
+
+      {/* Success toast */}
+      <AnimatePresence>
+        {saved && (
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28 }}
+            className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2"
+          >
+            <div className="flex items-center gap-2.5 rounded-full bg-gradient-to-br from-coral to-maple px-6 py-3 text-white shadow-[0_20px_50px_-15px_rgba(156,52,21,0.7)]">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-white/25 text-sm">
+                ✓
+              </span>
+              <span className="text-sm font-semibold">Saved successfully 🍂</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

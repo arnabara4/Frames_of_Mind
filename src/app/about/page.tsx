@@ -19,7 +19,7 @@ export default async function AboutPage() {
   return (
     <div className="relative overflow-hidden">
       <div className="relative z-10 mx-auto max-w-[1000px] px-6 py-12 md:px-10">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between gap-3">
           <p className="font-serif text-sm italic text-maple/70">
             a little about the keeper of these words
           </p>

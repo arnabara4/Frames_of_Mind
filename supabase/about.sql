@@ -56,3 +56,27 @@ select * from (values
   ('quote', 'Thanks for stopping by — just don''t touch my lunch, okay?', null, 'left', 'serif', 'lg', 'md', 4)
 ) as v(kind, content, image_url, align, font, size, img_width, position)
 where not exists (select 1 from public.about_blocks);
+
+-- Atomic replace-all used by the About editor (delete + insert in one txn so a
+-- failed save can never wipe the page). WHERE clause satisfies the no-unqualified-
+-- delete guard. Owner-only.
+create or replace function public.set_about_blocks(blocks jsonb)
+returns void
+language plpgsql
+security invoker
+as $$
+begin
+  if not public.is_owner() then
+    raise exception 'Only the owner can edit the About page';
+  end if;
+  delete from public.about_blocks where position is not null;
+  insert into public.about_blocks
+    (kind, content, image_url, align, font, size, img_width, img_pct, img_h, img_side, text_x, text_y, position)
+  select x.kind, x.content, x.image_url, coalesce(x.align,'left'), coalesce(x.font,'serif'),
+         coalesce(x.size,'md'), coalesce(x.img_width,'md'), x.img_pct, x.img_h,
+         coalesce(x.img_side,'left'), coalesce(x.text_x,0), coalesce(x.text_y,0), x.position
+  from jsonb_to_recordset(blocks) as x(
+    kind text, content text, image_url text, align text, font text, size text,
+    img_width text, img_pct int, img_h int, img_side text, text_x int, text_y int, position int
+  );
+end $$;
