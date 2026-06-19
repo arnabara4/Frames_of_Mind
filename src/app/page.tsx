@@ -5,6 +5,7 @@ import { BlogRow } from "@/components/BlogCard";
 import HomeGreeting from "@/components/HomeGreeting";
 import FloatFrame from "@/components/FloatFrame";
 import InstallButton from "@/components/pwa/InstallButton";
+import RotatingCta from "@/components/RotatingCta";
 import { Reveal, StaggerGrid, StaggerItem } from "@/components/motion";
 import { mergeHome } from "@/lib/home";
 
@@ -75,12 +76,7 @@ export default async function HomePage() {
                 >
                   {c.ctaPrimary} <span className="text-base">🍁</span>
                 </Link>
-                <Link
-                  href="/about"
-                  className="inline-flex items-center gap-2 rounded-full border border-coral/40 bg-white/60 px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-coral transition hover:bg-white active:scale-95"
-                >
-                  {c.ctaSecondary}
-                </Link>
+                <RotatingCta />
               </div>
             </Reveal>
           </div>
