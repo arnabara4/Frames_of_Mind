@@ -66,7 +66,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={busy}
-          className="rounded-lg bg-coral px-6 py-3 font-medium text-white transition hover:bg-coral-dark disabled:opacity-60"
+          className="rounded-lg bg-coral px-6 py-3 font-medium text-white shadow-[var(--shadow-warm)] transition hover:bg-coral-dark active:scale-95 disabled:opacity-60"
         >
           {busy ? "Signing in…" : "Log In"}
         </button>

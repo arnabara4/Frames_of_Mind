@@ -5,10 +5,11 @@ import { useMemo, useState } from "react";
 import type { Blog } from "@/lib/types";
 import { BlogCard } from "@/components/BlogCard";
 import { useAuth } from "@/components/AuthProvider";
+import { StaggerGrid, StaggerItem } from "@/components/motion";
 
 export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
   const [query, setQuery] = useState("");
-  const { user } = useAuth();
+  const { owner } = useAuth();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -35,24 +36,37 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
         />
       </div>
 
-      {user && (
-        <div className="mt-6 flex justify-end">
+      {owner && (
+        <div className="mt-6 flex justify-end gap-3">
+          <Link
+            href="/admin"
+            className="rounded-xl px-5 py-2.5 font-medium text-ink/60 transition hover:text-coral"
+          >
+            Dashboard
+          </Link>
           <Link
             href="/blogs/new"
-            className="rounded-xl border-2 border-coral px-7 py-2.5 font-medium text-coral transition hover:bg-coral hover:text-white"
+            className="rounded-xl border-2 border-coral px-7 py-2.5 font-medium text-coral transition hover:bg-coral hover:text-white active:scale-95"
           >
             ADD BLOG
           </Link>
         </div>
       )}
 
-      <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2">
-        {filtered.length === 0 ? (
-          <p className="text-ink/50">No blogs found.</p>
-        ) : (
-          filtered.map((b, i) => <BlogCard key={b.id} blog={b} seed={i} />)
-        )}
-      </div>
+      {filtered.length === 0 ? (
+        <p className="mt-10 text-bark/50">No blogs found.</p>
+      ) : (
+        <StaggerGrid
+          key={query}
+          className="mt-10 grid grid-cols-1 items-start gap-8 md:grid-cols-2"
+        >
+          {filtered.map((b, i) => (
+            <StaggerItem key={b.id} className="h-full">
+              <BlogCard blog={b} seed={i} />
+            </StaggerItem>
+          ))}
+        </StaggerGrid>
+      )}
     </div>
   );
 }

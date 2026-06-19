@@ -1,22 +1,33 @@
 @import "tailwindcss";
 
 @theme {
+  /* Core (from Figma) */
   --color-coral: #e35336;
   --color-coral-dark: #c8432a;
   --color-peach: #ffccc1;
   --color-salmon: #f4a896;
   --color-graybox: #d9d9d9;
-  --color-ink: #1a1a1a;
+  --color-ink: #2b1d16;
+
+  /* Autumn extension */
+  --color-amber: #d98324;
+  --color-gold: #efb04a;
+  --color-maple: #b6432a;
+  --color-rust: #9c3415;
+  --color-cream: #fff8f1;
+  --color-bark: #5a3a2a;
 
   --font-display: var(--font-playfair);
   --font-body: var(--font-inter);
   --font-serif: var(--font-inria);
   --font-script: var(--font-inknut);
+
+  --shadow-warm: 0 18px 40px -24px rgba(156, 52, 21, 0.45);
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
+  --background: #fff8f1;
+  --foreground: #2b1d16;
 }
 
 html {
@@ -24,9 +35,58 @@ html {
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), Arial, Helvetica, sans-serif;
+  background-color: var(--background);
+  /* Soft autumn wash — warm at the top, fading to cream. */
+  background-image:
+    radial-gradient(
+      120% 70% at 100% 0%,
+      rgba(239, 176, 74, 0.16) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      90% 60% at 0% 5%,
+      rgba(227, 83, 54, 0.1) 0%,
+      transparent 50%
+    );
+  background-attachment: fixed;
+}
+
+/* Comfortable reading column for blog prose. */
+.prose-fom {
+  max-width: 68ch;
+  font-size: 1.125rem;
+  line-height: 1.85;
+  letter-spacing: 0.003em;
+  color: rgba(43, 29, 22, 0.86);
+}
+.prose-fom p + p {
+  margin-top: 1.25rem;
+}
+
+/* Respect users who prefer less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Soft entrance used as a no-JS fallback */
+@keyframes rise-fade {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Underline-style inputs used on the contact form */

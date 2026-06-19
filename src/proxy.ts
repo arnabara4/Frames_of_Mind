@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isOwner, isProtectedPath } from "@/lib/auth";
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -29,11 +30,17 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Guard the editor — owners only.
-  if (!user && request.nextUrl.pathname.startsWith("/blogs/new")) {
+  // Owner-only routes: new editor, edit pages, admin dashboard.
+  if (isProtectedPath(request.nextUrl.pathname) && !isOwner(user)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("redirect", "/blogs/new");
+    // Unauthenticated → login (with return path); wrong account → homepage.
+    if (!user) {
+      url.pathname = "/login";
+      url.searchParams.set("redirect", request.nextUrl.pathname);
+    } else {
+      url.pathname = "/";
+      url.search = "";
+    }
     return NextResponse.redirect(url);
   }
 

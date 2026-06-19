@@ -40,27 +40,51 @@ alter table public.blogs         enable row level security;
 alter table public.blog_sections enable row level security;
 alter table public.messages      enable row level security;
 
--- blogs: public read, authenticated (owner) write
+-- Strict single-owner check: true only for the designated admin email.
+-- Centralised so every write policy shares one source of truth.
+create or replace function public.is_owner()
+returns boolean
+language sql
+stable
+as $$
+  select coalesce(auth.jwt() ->> 'email', '') = 'owner@framesofmind.app';
+$$;
+
+-- blogs: public read, owner-only write
 drop policy if exists "blogs_select_public" on public.blogs;
 create policy "blogs_select_public" on public.blogs for select using (true);
 
 drop policy if exists "blogs_write_owner" on public.blogs;
-create policy "blogs_write_owner" on public.blogs for all
-  to authenticated using (true) with check (true);
+drop policy if exists "blogs_insert_owner" on public.blogs;
+drop policy if exists "blogs_update_owner" on public.blogs;
+drop policy if exists "blogs_delete_owner" on public.blogs;
+create policy "blogs_insert_owner" on public.blogs for insert
+  to authenticated with check (public.is_owner());
+create policy "blogs_update_owner" on public.blogs for update
+  to authenticated using (public.is_owner()) with check (public.is_owner());
+create policy "blogs_delete_owner" on public.blogs for delete
+  to authenticated using (public.is_owner());
 
--- blog_sections: public read, authenticated write
+-- blog_sections: public read, owner-only write
 drop policy if exists "sections_select_public" on public.blog_sections;
 create policy "sections_select_public" on public.blog_sections for select using (true);
 
 drop policy if exists "sections_write_owner" on public.blog_sections;
-create policy "sections_write_owner" on public.blog_sections for all
-  to authenticated using (true) with check (true);
+drop policy if exists "sections_insert_owner" on public.blog_sections;
+drop policy if exists "sections_update_owner" on public.blog_sections;
+drop policy if exists "sections_delete_owner" on public.blog_sections;
+create policy "sections_insert_owner" on public.blog_sections for insert
+  to authenticated with check (public.is_owner());
+create policy "sections_update_owner" on public.blog_sections for update
+  to authenticated using (public.is_owner()) with check (public.is_owner());
+create policy "sections_delete_owner" on public.blog_sections for delete
+  to authenticated using (public.is_owner());
 
--- messages: anyone may insert, only authenticated may read
+-- messages: anyone may submit, only the owner may read
 drop policy if exists "messages_insert_public" on public.messages;
 create policy "messages_insert_public" on public.messages for insert
   to anon, authenticated with check (true);
 
 drop policy if exists "messages_select_owner" on public.messages;
 create policy "messages_select_owner" on public.messages for select
-  to authenticated using (true);
+  to authenticated using (public.is_owner());

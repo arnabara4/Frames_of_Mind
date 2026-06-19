@@ -9,15 +9,18 @@ import {
 } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { isOwner } from "@/lib/auth";
 
 interface AuthContextValue {
   user: User | null;
+  owner: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
+  owner: false,
   loading: true,
   signOut: async () => {},
 });
@@ -45,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      owner: isOwner(user),
       loading,
       signOut: async () => {
         await supabase.auth.signOut();
