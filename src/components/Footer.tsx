@@ -64,14 +64,6 @@ export default function Footer() {
             </h3>
             <ul className="mt-4 space-y-2.5">
               <li>
-                <a
-                  href="mailto:arnabjena4@gmail.com"
-                  className="text-white/85 transition hover:text-white"
-                >
-                  arnabjena4@gmail.com
-                </a>
-              </li>
-              <li>
                 <Link
                   href="/contact"
                   className="text-white/85 transition hover:text-white"

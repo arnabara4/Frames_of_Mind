@@ -74,12 +74,9 @@ export default function ContactPage() {
               <span className="grid h-9 w-9 place-items-center rounded-full bg-white/70 text-coral">
                 ✉
               </span>
-              <a
-                href="mailto:pranavisinghal2007@gmail.com"
-                className="transition hover:text-coral"
-              >
-                pranavisinghal2007@gmail.com
-              </a>
+              <span className="text-sm">
+                Use the form — it reaches me directly.
+              </span>
             </li>
             <li className="flex items-center gap-3">
               <span className="grid h-9 w-9 place-items-center rounded-full bg-white/70 text-coral">

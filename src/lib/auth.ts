@@ -1,10 +1,12 @@
 import type { User } from "@supabase/supabase-js";
 
-/** Accounts allowed to write content. Mirrors public.is_owner() in SQL. */
-export const OWNER_EMAILS = (
-  process.env.NEXT_PUBLIC_OWNER_EMAILS ??
-  "pranavi@frame.com,pranavisinghal2007@gmail.com"
-)
+/**
+ * Server-only owner allow-list. Read from a non-public env var so the emails are
+ * never bundled into client JS. The database `public.is_owner()` is the real
+ * gate; this mirrors it for server-side route guards. Client code must use the
+ * is_owner() RPC (see AuthProvider) instead of this.
+ */
+const OWNER_EMAILS = (process.env.OWNER_EMAILS ?? "")
   .split(",")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
