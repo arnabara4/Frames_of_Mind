@@ -49,43 +49,46 @@ function Field({
 }
 
 function FrameField({
+  label,
   item,
   onChange,
 }: {
+  label: string;
   item: FrameItem;
   onChange: (f: FrameItem) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-maple/15 bg-white/70 p-3">
-      <div className="flex gap-3">
-        <Thumb src={item.image_url} alt="" framed className="h-20 w-20 shrink-0" />
-        <div className="flex flex-1 flex-col gap-2">
-          <input
-            value={item.image_url}
-            placeholder="Image URL"
-            onChange={(e) => onChange({ ...item, image_url: e.target.value })}
-            className="w-full rounded-lg border border-maple/20 bg-cream/40 px-3 py-1.5 text-sm outline-none focus:border-coral"
-          />
-          <div className="flex gap-2">
-            <ImageUpload label="Upload" onUploaded={(url) => onChange({ ...item, image_url: url })} />
-            {item.image_url && (
-              <button
-                type="button"
-                onClick={() => onChange({ ...item, image_url: "" })}
-                className="text-xs text-ink/50 hover:text-coral"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+    <div className="flex flex-col gap-3 rounded-2xl border border-maple/15 bg-white/70 p-4 sm:flex-row sm:items-start">
+      <Thumb src={item.image_url} alt="" framed className="h-24 w-24 shrink-0" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-maple/60">
+          {label}
+        </span>
+        <input
+          value={item.caption}
+          placeholder="Caption"
+          onChange={(e) => onChange({ ...item, caption: e.target.value })}
+          className="w-full rounded-lg border border-maple/20 bg-cream/40 px-3 py-2 text-sm outline-none focus:border-coral focus:bg-white"
+        />
+        <input
+          value={item.image_url}
+          placeholder="Image URL (or upload)"
+          onChange={(e) => onChange({ ...item, image_url: e.target.value })}
+          className="w-full rounded-lg border border-maple/20 bg-cream/40 px-3 py-2 text-sm outline-none focus:border-coral focus:bg-white"
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <ImageUpload label="Upload" onUploaded={(url) => onChange({ ...item, image_url: url })} />
+          {item.image_url && (
+            <button
+              type="button"
+              onClick={() => onChange({ ...item, image_url: "" })}
+              className="text-xs font-medium text-ink/50 hover:text-coral"
+            >
+              Clear
+            </button>
+          )}
         </div>
       </div>
-      <input
-        value={item.caption}
-        placeholder="Caption"
-        onChange={(e) => onChange({ ...item, caption: e.target.value })}
-        className="mt-2 w-full rounded-lg border border-maple/20 bg-cream/40 px-3 py-1.5 text-sm outline-none focus:border-coral"
-      />
     </div>
   );
 }
@@ -166,10 +169,15 @@ export default function HomeEditor({
           <Field label="Background word" value={c.bgWord} onChange={(v) => set("bgWord", v)} />
         </Section>
 
-        <Section title="Hero frames (3)">
-          <div className="grid gap-3 sm:grid-cols-3">
+        <Section title="Hero frames">
+          <div className="flex flex-col gap-3">
             {c.frames.map((f, i) => (
-              <FrameField key={i} item={f} onChange={(nf) => setFrame("frames", i, nf)} />
+              <FrameField
+                key={i}
+                label={`Frame ${i + 1}`}
+                item={f}
+                onChange={(nf) => setFrame("frames", i, nf)}
+              />
             ))}
           </div>
         </Section>
@@ -179,10 +187,15 @@ export default function HomeEditor({
           <Field label="Quote caption" value={c.quoteCaption} onChange={(v) => set("quoteCaption", v)} />
         </Section>
 
-        <Section title="Moments gallery (3)">
-          <div className="grid gap-3 sm:grid-cols-3">
+        <Section title="Moments gallery">
+          <div className="flex flex-col gap-3">
             {c.gallery.map((f, i) => (
-              <FrameField key={i} item={f} onChange={(nf) => setFrame("gallery", i, nf)} />
+              <FrameField
+                key={i}
+                label={`Moment ${i + 1}`}
+                item={f}
+                onChange={(nf) => setFrame("gallery", i, nf)}
+              />
             ))}
           </div>
         </Section>
@@ -192,22 +205,32 @@ export default function HomeEditor({
         <p className="mt-4 rounded-lg bg-coral/10 px-4 py-2 text-sm text-coral-dark">{error}</p>
       )}
 
-      <div className="sticky bottom-5 z-30 mt-8 flex justify-end gap-3 rounded-full border border-maple/15 bg-cream/90 p-3 pl-6 shadow-lg backdrop-blur">
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="rounded-full px-5 py-2.5 text-sm font-semibold uppercase tracking-wider text-bark/60 transition hover:text-bark"
-        >
-          View home
-        </button>
-        <button
-          type="button"
-          onClick={save}
-          disabled={saving}
-          className="rounded-full bg-coral px-7 py-2.5 text-sm font-semibold uppercase tracking-wider text-white shadow-[var(--shadow-warm)] transition hover:bg-coral-dark active:scale-95 disabled:opacity-60"
-        >
-          {saving ? "Saving…" : "✓ Save Home"}
-        </button>
+      <div className="sticky bottom-5 z-30 mt-8">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 rounded-full border border-maple/15 bg-cream/90 px-3 py-2.5 pl-6 shadow-[0_20px_50px_-20px_rgba(156,52,21,0.6)] backdrop-blur-md">
+          <span className="flex items-center gap-2 text-sm text-bark/70">
+            <span className="text-lg">🍂</span>
+            <span className="hidden font-serif italic sm:inline">
+              shaping your landing page
+            </span>
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => router.push("/")}
+              className="rounded-full px-5 py-2.5 text-sm font-semibold uppercase tracking-wider text-bark/60 transition hover:text-bark"
+            >
+              View home
+            </button>
+            <button
+              type="button"
+              onClick={save}
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-full bg-coral px-7 py-2.5 text-sm font-semibold uppercase tracking-wider text-white shadow-[var(--shadow-warm)] transition hover:bg-coral-dark active:scale-95 disabled:opacity-60"
+            >
+              {saving ? "Saving…" : "✓ Save Home"}
+            </button>
+          </div>
+        </div>
       </div>
 
       <AnimatePresence>
