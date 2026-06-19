@@ -534,12 +534,12 @@ function ResizableImage({
       ref={ref}
       style={
         basis
-          ? { flexBasis: `${pct}%`, height: `${h}px` }
-          : { width: `${pct}%`, height: `${h}px`, maxWidth: "100%" }
+          ? { flexBasis: `${pct}%` }
+          : { width: `${pct}%`, maxWidth: "100%" }
       }
-      className={`group/img relative ${basis ? "min-w-0 shrink-0" : ""}`}
+      className={`group/img relative ${basis ? "min-w-0 shrink-0 self-start" : ""}`}
     >
-      <Thumb src={src} alt="About image" seed={seed} framed className="h-full w-full" />
+      <Thumb src={src} alt="About image" seed={seed} framed natural className="w-full" />
 
       <div
         className={`pointer-events-none absolute inset-0 rounded-2xl transition ${
@@ -548,7 +548,7 @@ function ResizableImage({
             : "opacity-0 ring-1 ring-coral/30 group-hover/img:opacity-100"
         }`}
       />
-      {HANDLES.map((hd, i) => (
+      {HANDLES.filter((hd) => hd.sx !== 0).map((hd, i) => (
         <span
           key={i}
           onPointerDown={(e) => start(e, hd.sx, hd.sy)}

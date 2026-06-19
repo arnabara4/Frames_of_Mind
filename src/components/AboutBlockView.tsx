@@ -84,14 +84,13 @@ export default function AboutBlockView({
       const justify =
         block.align === "left" ? "justify-start" : block.align === "right" ? "justify-end" : "justify-center";
       const w = block.img_pct ? `${block.img_pct}%` : undefined;
-      const h = block.img_h ?? 288;
       return (
         <div className={`flex w-full ${justify}`}>
           <div
-            style={{ width: w, height: h, maxWidth: "100%" }}
+            style={{ width: w, maxWidth: "100%" }}
             className={w ? "" : `w-full ${IMG_WIDTH_CLASS[block.img_width]}`}
           >
-            <Thumb src={block.image_url} alt="About image" seed={index} framed className="h-full w-full" />
+            <Thumb src={block.image_url} alt="About image" seed={index} framed natural className="w-full" />
           </div>
         </div>
       );
@@ -99,10 +98,9 @@ export default function AboutBlockView({
 
     case "split": {
       const pct = block.img_pct ?? 50;
-      const h = block.img_h ?? 256;
       const img = (
-        <div style={{ flexBasis: `${pct}%`, height: h }} className="min-w-0 shrink-0">
-          <Thumb src={block.image_url} alt="About image" seed={index} framed className="h-full w-full" />
+        <div style={{ flexBasis: `${pct}%`, maxWidth: "100%" }} className="min-w-0 shrink-0 self-start">
+          <Thumb src={block.image_url} alt="About image" seed={index} framed natural className="w-full" />
         </div>
       );
       const text = (
@@ -116,7 +114,7 @@ export default function AboutBlockView({
         </div>
       );
       return (
-        <div className="flex flex-col gap-6 md:flex-row md:items-stretch">
+        <div className="flex flex-col gap-6 md:flex-row md:items-start">
           {block.img_side === "right" ? (
             <>
               {text}

@@ -20,6 +20,7 @@ export default function Thumb({
   framed = false,
   rounded = "rounded-2xl",
   priority = false,
+  natural = false,
   sizes = "(max-width: 768px) 100vw, 50vw",
 }: {
   src?: string | null;
@@ -29,6 +30,8 @@ export default function Thumb({
   framed?: boolean;
   rounded?: string;
   priority?: boolean;
+  /** Render at the image's own aspect ratio (full image, no crop) instead of cover-fill. */
+  natural?: boolean;
   sizes?: string;
 }) {
   const [failed, setFailed] = useState(false);
@@ -45,8 +48,36 @@ export default function Thumb({
     "from-gold/70 via-peach to-salmon/70",
   ];
   const g = gradients[seed % gradients.length];
-
   const showImg = !!src && !failed;
+
+  // Natural mode: image keeps its own aspect (no crop, fits the frame, full
+  // quality). Used by the About page so the live preview matches the published
+  // page regardless of container width.
+  if (natural) {
+    return (
+      <div className={`overflow-hidden ${rounded} ${frame} ${className}`}>
+        {showImg ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={src as string}
+            alt={alt ?? ""}
+            loading={priority ? "eager" : "lazy"}
+            onError={() => setFailed(true)}
+            className={`block h-auto w-full ${rounded}`}
+          />
+        ) : (
+          <div
+            className={`flex aspect-[3/2] w-full items-center justify-center bg-gradient-to-br ${g} ${rounded}`}
+            aria-label={alt}
+          >
+            <span className="select-none font-display text-lg text-white/80 drop-shadow">
+              Frames of Mind
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={`overflow-hidden ${rounded} ${frame} ${className}`}>
