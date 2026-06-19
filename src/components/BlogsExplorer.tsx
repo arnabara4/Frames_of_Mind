@@ -1,72 +1,288 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Blog } from "@/lib/types";
 import { BlogCard } from "@/components/BlogCard";
 import { useAuth } from "@/components/AuthProvider";
 import { StaggerGrid, StaggerItem } from "@/components/motion";
 
+const PER_PAGE = 8;
+
+type Period = "all" | "week" | "month" | "year";
+type Sort = "newest" | "oldest";
+
+const PERIODS: { value: Period; label: string }[] = [
+  { value: "all", label: "All Seasons" },
+  { value: "week", label: "This Week" },
+  { value: "month", label: "This Month" },
+  { value: "year", label: "This Year" },
+];
+
+function withinPeriod(iso: string, period: Period): boolean {
+  if (period === "all") return true;
+  const now = Date.now();
+  const t = new Date(iso).getTime();
+  const day = 86_400_000;
+  const span =
+    period === "week" ? 7 * day : period === "month" ? 30 * day : 365 * day;
+  return now - t <= span;
+}
+
 export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
-  const [query, setQuery] = useState("");
   const { owner } = useAuth();
+  const [query, setQuery] = useState("");
+  const [period, setPeriod] = useState<Period>("all");
+  const [sort, setSort] = useState<Sort>("newest");
+  const [page, setPage] = useState(1);
+  const [goto, setGoto] = useState("");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return blogs;
-    return blogs.filter(
-      (b) =>
-        b.title.toLowerCase().includes(q) ||
-        (b.excerpt ?? "").toLowerCase().includes(q),
-    );
-  }, [blogs, query]);
+    const list = blogs
+      .filter((b) => withinPeriod(b.created_at, period))
+      .filter(
+        (b) =>
+          !q ||
+          b.title.toLowerCase().includes(q) ||
+          (b.excerpt ?? "").toLowerCase().includes(q),
+      );
+    list.sort((a, b) => {
+      const da = new Date(a.created_at).getTime();
+      const db = new Date(b.created_at).getTime();
+      return sort === "newest" ? db - da : da - db;
+    });
+    return list;
+  }, [blogs, query, period, sort]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+
+  // Keep the page valid when filters shrink the result set.
+  useEffect(() => {
+    setPage(1);
+  }, [query, period, sort]);
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
+
+  const start = (page - 1) * PER_PAGE;
+  const pageItems = filtered.slice(start, start + PER_PAGE);
+
+  function jump() {
+    const n = parseInt(goto, 10);
+    if (!Number.isNaN(n)) setPage(Math.min(pageCount, Math.max(1, n)));
+    setGoto("");
+  }
 
   return (
     <div className="mx-auto max-w-[1440px] px-6 py-10 md:px-10">
-      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-        <h1 className="font-display text-4xl font-extrabold text-coral md:text-6xl">
-          MY BLOGS
-        </h1>
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search"
-          className="w-full rounded-full border border-black/15 px-6 py-3 outline-none focus:border-coral md:w-96"
-        />
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="font-serif text-sm italic text-maple/70">
+            a collection of autumn thoughts
+          </p>
+          <h1 className="font-display text-4xl font-extrabold text-coral md:text-6xl">
+            My Blogs
+          </h1>
+        </div>
+
+        {owner && (
+          <div className="flex gap-3">
+            <Link
+              href="/admin"
+              className="rounded-xl px-5 py-2.5 font-medium text-ink/60 transition hover:text-coral"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/blogs/new"
+              className="rounded-xl border-2 border-coral px-7 py-2.5 font-medium text-coral transition hover:bg-coral hover:text-white active:scale-95"
+            >
+              + Add Blog
+            </Link>
+          </div>
+        )}
       </div>
 
-      {owner && (
-        <div className="mt-6 flex justify-end gap-3">
-          <Link
-            href="/admin"
-            className="rounded-xl px-5 py-2.5 font-medium text-ink/60 transition hover:text-coral"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/blogs/new"
-            className="rounded-xl border-2 border-coral px-7 py-2.5 font-medium text-coral transition hover:bg-coral hover:text-white active:scale-95"
-          >
-            ADD BLOG
-          </Link>
-        </div>
-      )}
+      {/* ── Filter bar — styled as a warm autumn shelf, part of the page ── */}
+      <div className="mt-8 rounded-[28px] border border-maple/15 bg-gradient-to-br from-peach/40 via-cream/60 to-salmon/25 p-4 shadow-[var(--shadow-warm)] backdrop-blur md:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          {/* Search */}
+          <div className="relative w-full lg:max-w-xs">
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-maple/60">
+              ⌕
+            </span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search the words…"
+              className="w-full rounded-full border border-maple/20 bg-white/80 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-coral"
+            />
+          </div>
 
+          {/* Period chips */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 text-xs font-semibold uppercase tracking-widest text-maple/60">
+              🍂 Season
+            </span>
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                onClick={() => setPeriod(p.value)}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition active:scale-95 ${
+                  period === p.value
+                    ? "bg-coral text-white shadow-sm"
+                    : "bg-white/70 text-bark/70 hover:bg-white hover:text-coral"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Sort */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-widest text-maple/60">
+              Sort
+            </span>
+            <div className="flex overflow-hidden rounded-full ring-1 ring-maple/20">
+              {(["newest", "oldest"] as Sort[]).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSort(s)}
+                  className={`px-3.5 py-1.5 text-xs font-semibold capitalize transition ${
+                    sort === s
+                      ? "bg-coral text-white"
+                      : "bg-white/70 text-bark/70 hover:text-coral"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Result line */}
+        <p className="mt-3 px-1 text-xs text-bark/55">
+          {filtered.length} {filtered.length === 1 ? "story" : "stories"}
+          {query && ` matching “${query}”`} · page {page} of {pageCount}
+        </p>
+      </div>
+
+      {/* ── Grid ── */}
       {filtered.length === 0 ? (
-        <p className="mt-10 text-bark/50">No blogs found.</p>
+        <p className="mt-12 text-center text-bark/50">
+          No stories here yet — try a different season. 🍁
+        </p>
       ) : (
         <StaggerGrid
-          key={query}
+          key={`${query}-${period}-${sort}-${page}`}
           className="mt-10 grid grid-cols-1 items-start gap-8 md:grid-cols-2"
         >
-          {filtered.map((b, i) => (
+          {pageItems.map((b, i) => (
             <StaggerItem key={b.id} className="h-full">
               <BlogCard blog={b} seed={i} />
             </StaggerItem>
           ))}
         </StaggerGrid>
       )}
+
+      {/* ── Pagination ── */}
+      {pageCount > 1 && (
+        <div className="mt-12 flex flex-col items-center gap-5">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <PageBtn
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              ← Prev
+            </PageBtn>
+
+            {pageNumbers(page, pageCount).map((n, i) =>
+              n === "…" ? (
+                <span key={`g${i}`} className="px-2 text-bark/40">
+                  …
+                </span>
+              ) : (
+                <button
+                  key={n}
+                  onClick={() => setPage(n as number)}
+                  className={`h-10 w-10 rounded-full text-sm font-semibold transition active:scale-90 ${
+                    page === n
+                      ? "bg-coral text-white shadow-[var(--shadow-warm)]"
+                      : "bg-white/70 text-bark/70 ring-1 ring-maple/15 hover:bg-peach/50 hover:text-coral"
+                  }`}
+                >
+                  {n}
+                </button>
+              ),
+            )}
+
+            <PageBtn
+              disabled={page === pageCount}
+              onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+            >
+              Next →
+            </PageBtn>
+          </div>
+
+          {/* Go-to jump */}
+          <div className="flex items-center gap-2 text-sm text-bark/60">
+            <span>Leap to</span>
+            <input
+              type="number"
+              min={1}
+              max={pageCount}
+              value={goto}
+              onChange={(e) => setGoto(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && jump()}
+              placeholder="#"
+              className="h-9 w-16 rounded-full border border-maple/25 bg-white/80 text-center outline-none transition focus:border-coral"
+            />
+            <button
+              onClick={jump}
+              className="h-9 rounded-full bg-coral px-4 text-sm font-semibold text-white transition hover:bg-coral-dark active:scale-95"
+            >
+              Go
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function PageBtn({
+  children,
+  onClick,
+  disabled,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-bark/70 ring-1 ring-maple/15 transition hover:bg-peach/50 hover:text-coral active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Compact page list with ellipses, e.g. 1 … 4 5 [6] 7 8 … 12 */
+function pageNumbers(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const out: (number | "…")[] = [1];
+  const lo = Math.max(2, current - 1);
+  const hi = Math.min(total - 1, current + 1);
+  if (lo > 2) out.push("…");
+  for (let i = lo; i <= hi; i++) out.push(i);
+  if (hi < total - 1) out.push("…");
+  out.push(total);
+  return out;
 }
