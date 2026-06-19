@@ -23,7 +23,19 @@ export interface DraftBlock {
   img_pct: number | null;
   img_h: number | null;
   img_side: "left" | "right";
+  text_x: number;
+  text_y: number;
 }
+
+const KIND_OPTIONS: { v: AboutKind; label: string }[] = [
+  { v: "heading", label: "Heading" },
+  { v: "paragraph", label: "Paragraph" },
+  { v: "list", label: "List" },
+  { v: "quote", label: "Quote" },
+  { v: "image", label: "Image" },
+  { v: "split", label: "Image + Text" },
+  { v: "divider", label: "Divider" },
+];
 
 const PLACEHOLDER: Record<AboutKind, string> = {
   heading: "Heading text…  (**bold**, *italic*)",
@@ -93,15 +105,32 @@ export default function AboutBlockEditor({
     const ta = taRef.current;
     if (!ta) return;
     const { selectionStart: s, selectionEnd: e, value } = ta;
-    const sel = value.slice(s, e) || "text";
-    onChange({
-      ...block,
-      content: value.slice(0, s) + marker + sel + marker + value.slice(e),
-    });
-    requestAnimationFrame(() => {
-      ta.focus();
-      ta.setSelectionRange(s + marker.length, s + marker.length + sel.length);
-    });
+    const m = marker.length;
+    const sel = value.slice(s, e);
+    const restore = (a: number, b: number) =>
+      requestAnimationFrame(() => {
+        ta.focus();
+        ta.setSelectionRange(a, b);
+      });
+
+    if (sel) {
+      const already =
+        sel.startsWith(marker) && sel.endsWith(marker) && sel.length >= m * 2;
+      if (already) {
+        const inner = sel.slice(m, sel.length - m);
+        onChange({ ...block, content: value.slice(0, s) + inner + value.slice(e) });
+        restore(s, s + inner.length);
+      } else {
+        onChange({
+          ...block,
+          content: value.slice(0, s) + marker + sel + marker + value.slice(e),
+        });
+        restore(s + m, s + m + sel.length);
+      }
+    } else {
+      onChange({ ...block, content: value.slice(0, s) + marker + marker + value.slice(s) });
+      restore(s + m, s + m); // caret between the markers
+    }
   }
 
   return (
@@ -112,9 +141,31 @@ export default function AboutBlockEditor({
       }`}
     >
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-widest text-coral/80">
-          {block.kind === "split" ? "image + text" : block.kind}
-        </span>
+        <label className="relative">
+          <span className="sr-only">Block type</span>
+          <select
+            value={block.kind}
+            onChange={(e) => {
+              const k = e.target.value as AboutKind;
+              const next = { ...block, kind: k };
+              if (k === "image" || k === "split") {
+                if (next.img_pct == null) next.img_pct = k === "split" ? 50 : 60;
+                if (next.img_h == null) next.img_h = k === "split" ? 256 : 288;
+              }
+              onChange(next);
+            }}
+            className="cursor-pointer appearance-none rounded-md bg-peach/40 py-1 pl-2.5 pr-7 text-xs font-semibold uppercase tracking-widest text-coral/90 outline-none transition hover:bg-peach/60"
+          >
+            {KIND_OPTIONS.map((o) => (
+              <option key={o.v} value={o.v} className="normal-case tracking-normal">
+                {o.label}
+              </option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-coral/60">
+            ▾
+          </span>
+        </label>
         <div className="flex items-center gap-1">
           <button type="button" onClick={() => onMove(-1)} disabled={index === 0}
             aria-label="Move up"

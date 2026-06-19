@@ -14,6 +14,8 @@ create table if not exists public.about_blocks (
   img_pct    int,
   img_h      int,
   img_side   text not null default 'left'  check (img_side in ('left','right')),
+  text_x     int  not null default 0,
+  text_y     int  not null default 0,
   position   int  not null default 0,
   created_at timestamptz not null default now()
 );
@@ -22,6 +24,8 @@ create table if not exists public.about_blocks (
 alter table public.about_blocks add column if not exists img_pct int;
 alter table public.about_blocks add column if not exists img_h int;
 alter table public.about_blocks add column if not exists img_side text not null default 'left';
+alter table public.about_blocks add column if not exists text_x int not null default 0;
+alter table public.about_blocks add column if not exists text_y int not null default 0;
 
 create index if not exists about_blocks_position_idx on public.about_blocks (position);
 

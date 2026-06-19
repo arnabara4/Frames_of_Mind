@@ -49,14 +49,32 @@ export default function SectionEditor({
     const ta = taRef.current;
     if (!ta) return;
     const { selectionStart: s, selectionEnd: e, value } = ta;
-    const selected = value.slice(s, e) || "text";
-    const next = value.slice(0, s) + marker + selected + marker + value.slice(e);
-    onChange({ ...section, content: next });
-    // Restore a sensible selection after React re-renders.
-    requestAnimationFrame(() => {
-      ta.focus();
-      ta.setSelectionRange(s + marker.length, s + marker.length + selected.length);
-    });
+    const m = marker.length;
+    const sel = value.slice(s, e);
+    const restore = (a: number, b: number) =>
+      requestAnimationFrame(() => {
+        ta.focus();
+        ta.setSelectionRange(a, b);
+      });
+
+    if (sel) {
+      const already =
+        sel.startsWith(marker) && sel.endsWith(marker) && sel.length >= m * 2;
+      if (already) {
+        const inner = sel.slice(m, sel.length - m);
+        onChange({ ...section, content: value.slice(0, s) + inner + value.slice(e) });
+        restore(s, s + inner.length);
+      } else {
+        onChange({
+          ...section,
+          content: value.slice(0, s) + marker + sel + marker + value.slice(e),
+        });
+        restore(s + m, s + m + sel.length);
+      }
+    } else {
+      onChange({ ...section, content: value.slice(0, s) + marker + marker + value.slice(s) });
+      restore(s + m, s + m);
+    }
   }
 
   return (

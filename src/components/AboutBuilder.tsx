@@ -33,6 +33,8 @@ function blank(kind: AboutKind): DraftBlock {
     img_pct: kind === "split" ? 50 : kind === "image" ? 60 : null,
     img_h: kind === "split" ? 256 : kind === "image" ? 288 : null,
     img_side: "left",
+    text_x: 0,
+    text_y: 0,
   };
 }
 
@@ -53,6 +55,8 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
       img_pct: b.img_pct,
       img_h: b.img_h,
       img_side: b.img_side ?? "left",
+      text_x: b.text_x ?? 0,
+      text_y: b.text_y ?? 0,
     })),
   );
   const [selected, setSelected] = useState<number | null>(null);
@@ -89,6 +93,29 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
     editorRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  /** Arrow keys nudge the selected split block's text (Canva-style). */
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (selected == null) return;
+      const tag = (document.activeElement?.tagName ?? "").toLowerCase();
+      if (tag === "input" || tag === "textarea") return; // don't hijack typing
+      const b = blocks[selected];
+      if (!b || b.kind !== "split") return;
+      const step = e.shiftKey ? 10 : 2;
+      let nx = b.text_x;
+      let ny = b.text_y;
+      if (e.key === "ArrowLeft") nx -= step;
+      else if (e.key === "ArrowRight") nx += step;
+      else if (e.key === "ArrowUp") ny -= step;
+      else if (e.key === "ArrowDown") ny += step;
+      else return;
+      e.preventDefault();
+      update(selected, { ...b, text_x: nx, text_y: ny });
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selected, blocks]);
+
   async function save() {
     setError(null);
     setSaving(true);
@@ -105,6 +132,8 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
         img_pct: b.img_pct,
         img_h: b.img_h,
         img_side: b.img_side,
+        text_x: b.text_x,
+        text_y: b.text_y,
         position,
       }));
       const { error: err } = await supabase.from("about_blocks").insert(rows);
@@ -193,6 +222,7 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
                     selected={selected === i}
                     onSelect={() => selectFromPreview(i)}
                     onResize={(pct, h) => update(i, { ...b, img_pct: pct, img_h: h })}
+                    onMoveText={(x, y) => update(i, { ...b, text_x: x, text_y: y })}
                   />
                 ))
               )}
@@ -247,12 +277,14 @@ function PreviewItem({
   selected,
   onSelect,
   onResize,
+  onMoveText,
 }: {
   block: DraftBlock;
   index: number;
   selected: boolean;
   onSelect: () => void;
   onResize: (pct: number, h: number) => void;
+  onMoveText: (x: number, y: number) => void;
 }) {
   const wrapClass = `group relative cursor-pointer rounded-xl p-2 transition ${
     selected
@@ -298,13 +330,12 @@ function PreviewItem({
             onResize={onResize}
             floatClass={floatCls}
           />
-          <div
-            className={`whitespace-pre-wrap leading-relaxed text-bark/85 ${FONT_CLASS[block.font]} ${SIZE_CLASS[block.size]} ${ALIGN_CLASS[block.align]}`}
-          >
-            {renderRich(block.content) || (
-              <span className="text-ink/30">Text wraps around the image…</span>
-            )}
-          </div>
+          <DraggableText
+            block={block}
+            onSelect={onSelect}
+            onMove={onMoveText}
+            selected={selected}
+          />
         </div>
       </div>
     );
@@ -313,6 +344,52 @@ function PreviewItem({
   return (
     <div onClick={onSelect} className={wrapClass}>
       <AboutBlockView block={block} index={index} />
+    </div>
+  );
+}
+
+/** The split block's text — selectable, draggable, and arrow-nudgeable. */
+function DraggableText({
+  block,
+  selected,
+  onSelect,
+  onMove,
+}: {
+  block: DraftBlock;
+  selected: boolean;
+  onSelect: () => void;
+  onMove: (x: number, y: number) => void;
+}) {
+  function start(e: React.PointerEvent) {
+    e.stopPropagation();
+    onSelect();
+    const sx = e.clientX;
+    const sy = e.clientY;
+    const ox = block.text_x;
+    const oy = block.text_y;
+    const move = (ev: PointerEvent) => {
+      onMove(ox + (ev.clientX - sx), oy + (ev.clientY - sy));
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+
+  return (
+    <div
+      onPointerDown={start}
+      title="Drag to move · arrow keys to nudge"
+      style={{ transform: `translate(${block.text_x}px, ${block.text_y}px)` }}
+      className={`cursor-move touch-none whitespace-pre-wrap rounded leading-relaxed text-bark/85 transition ${FONT_CLASS[block.font]} ${SIZE_CLASS[block.size]} ${ALIGN_CLASS[block.align]} ${
+        selected ? "ring-2 ring-coral/50 ring-offset-2 ring-offset-transparent" : "hover:ring-1 hover:ring-coral/30"
+      }`}
+    >
+      {renderRich(block.content) || (
+        <span className="text-ink/30">Text wraps around the image…</span>
+      )}
     </div>
   );
 }

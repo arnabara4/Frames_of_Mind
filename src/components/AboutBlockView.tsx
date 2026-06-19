@@ -20,6 +20,8 @@ export interface AboutView {
   img_pct: number | null;
   img_h: number | null;
   img_side: "left" | "right";
+  text_x?: number;
+  text_y?: number;
 }
 
 export default function AboutBlockView({
@@ -111,7 +113,12 @@ export default function AboutBlockView({
           >
             <Thumb src={block.image_url} alt="About image" seed={index} framed className="h-full w-full" />
           </div>
-          <div className={`${font} ${size} whitespace-pre-wrap leading-relaxed text-bark/85 ${align}`}>
+          <div
+            style={{
+              transform: `translate(${block.text_x ?? 0}px, ${block.text_y ?? 0}px)`,
+            }}
+            className={`${font} ${size} whitespace-pre-wrap leading-relaxed text-bark/85 ${align}`}
+          >
             {renderRich(block.content) || (
               <span className="text-ink/30">Text wraps around the image…</span>
             )}

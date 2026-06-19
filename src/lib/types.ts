@@ -42,6 +42,8 @@ export interface AboutBlock {
   img_pct: number | null;
   img_h: number | null;
   img_side: "left" | "right";
+  text_x: number;
+  text_y: number;
   position: number;
 }
 
