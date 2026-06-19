@@ -29,7 +29,6 @@ export const DEFAULT_HOME: HomeContent = {
   frames: [
     { image_url: "", caption: "frames of mind" },
     { image_url: "", caption: "october light" },
-    { image_url: "", caption: "quiet pages" },
   ],
   quote:
     "Never stop fighting until you arrive at your destined place — that is, the unique you.",
@@ -41,18 +40,18 @@ export const DEFAULT_HOME: HomeContent = {
   ],
 };
 
-/** Merge stored partial content over the defaults (and pad frame arrays to 3). */
+/** Merge stored partial content over the defaults, padding arrays to fixed sizes. */
 export function mergeHome(data: Partial<HomeContent> | null | undefined): HomeContent {
   const d = data ?? {};
-  const pad = (arr: FrameItem[] | undefined, fallback: FrameItem[]) => {
+  const pad = (arr: FrameItem[] | undefined, fallback: FrameItem[], n: number) => {
     const out = [...(arr ?? [])];
-    for (let i = 0; i < 3; i++) out[i] = { ...fallback[i], ...(out[i] ?? {}) };
-    return out.slice(0, 3);
+    for (let i = 0; i < n; i++) out[i] = { ...fallback[i], ...(out[i] ?? {}) };
+    return out.slice(0, n);
   };
   return {
     ...DEFAULT_HOME,
     ...d,
-    frames: pad(d.frames, DEFAULT_HOME.frames),
-    gallery: pad(d.gallery, DEFAULT_HOME.gallery),
+    frames: pad(d.frames, DEFAULT_HOME.frames, 2),
+    gallery: pad(d.gallery, DEFAULT_HOME.gallery, 3),
   };
 }

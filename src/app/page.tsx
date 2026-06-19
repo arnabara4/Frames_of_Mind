@@ -91,7 +91,7 @@ export default async function HomePage() {
                 delay={0}
                 floatRange={12}
                 aspect="aspect-[4/5]"
-                className="absolute left-[6%] top-[6%] w-[60%]"
+                className="absolute left-[4%] top-[4%] w-[58%]"
               />
               <FloatFrame
                 seed={2}
@@ -102,18 +102,7 @@ export default async function HomePage() {
                 delay={1.1}
                 floatRange={9}
                 aspect="aspect-square"
-                className="absolute right-[1%] top-0 w-[42%]"
-              />
-              <FloatFrame
-                seed={1}
-                ornate
-                src={c.frames[2].image_url}
-                caption={c.frames[2].caption}
-                rotate={-7}
-                delay={0.6}
-                floatRange={11}
-                aspect="aspect-[5/4]"
-                className="absolute bottom-[2%] left-0 w-[46%]"
+                className="absolute bottom-[6%] right-[2%] w-[46%]"
               />
             </div>
           </Reveal>
