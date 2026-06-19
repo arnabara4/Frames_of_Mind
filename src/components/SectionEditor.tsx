@@ -100,7 +100,7 @@ export default function SectionEditor({
             onClick={onDelete}
             aria-label="Delete section"
             title="Delete section"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold text-coral transition hover:bg-coral hover:text-white active:scale-90"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-coral transition hover:bg-coral hover:text-white active:scale-90"
           >
             ×
           </button>
@@ -194,7 +194,7 @@ function IconBtn({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="flex h-7 w-7 items-center justify-center rounded-full text-ink/50 transition hover:bg-peach/50 hover:text-ink disabled:opacity-30"
+      className="flex h-9 w-9 items-center justify-center rounded-full text-ink/50 transition hover:bg-peach/50 hover:text-ink disabled:opacity-30"
     >
       {children}
     </button>
@@ -218,7 +218,7 @@ function ToolBtn({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className={`flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm transition active:scale-90 ${
+      className={`flex h-9 min-w-9 items-center justify-center rounded-md px-2.5 text-sm transition active:scale-90 ${
         active
           ? "bg-coral text-white"
           : "bg-peach/30 text-ink hover:bg-peach/60"

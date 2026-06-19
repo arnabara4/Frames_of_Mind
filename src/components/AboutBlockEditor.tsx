@@ -169,12 +169,12 @@ export default function AboutBlockEditor({
         <div className="flex items-center gap-1">
           <button type="button" onClick={() => onMove(-1)} disabled={index === 0}
             aria-label="Move up"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-ink/50 transition hover:bg-peach/50 disabled:opacity-30">↑</button>
+            className="flex h-9 w-9 items-center justify-center rounded-full text-ink/50 transition hover:bg-peach/50 disabled:opacity-30">↑</button>
           <button type="button" onClick={() => onMove(1)} disabled={index === count - 1}
             aria-label="Move down"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-ink/50 transition hover:bg-peach/50 disabled:opacity-30">↓</button>
+            className="flex h-9 w-9 items-center justify-center rounded-full text-ink/50 transition hover:bg-peach/50 disabled:opacity-30">↓</button>
           <button type="button" onClick={onDelete} aria-label="Delete"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold text-coral transition hover:bg-coral hover:text-white">×</button>
+            className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold text-coral transition hover:bg-coral hover:text-white">×</button>
         </div>
       </div>
 
