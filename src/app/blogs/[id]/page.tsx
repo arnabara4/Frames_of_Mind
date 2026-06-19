@@ -1,15 +1,73 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { Blog, BlogSection } from "@/lib/types";
 import { formatDate } from "@/lib/types";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import SectionRenderer from "@/components/SectionRenderer";
 import BlogOwnerActions from "@/components/BlogOwnerActions";
 import Thumb from "@/components/Thumb";
 import CoverFallback from "@/components/CoverFallback";
 import { Reveal } from "@/components/motion";
 
-export const dynamic = "force-dynamic";
+// Public, cacheable read — deduped between generateMetadata and the page.
+const getPost = cache(async (id: string) => {
+  const supabase = createPublicClient();
+  const { data: blog } = await supabase
+    .from("blogs")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (!blog) return null;
+  const { data: sectionsData } = await supabase
+    .from("blog_sections")
+    .select("*")
+    .eq("blog_id", id)
+    .order("position", { ascending: true });
+  return {
+    post: blog as Blog,
+    sections: (sectionsData ?? []) as BlogSection[],
+  };
+});
+
+// Revalidate the rendered page at most once a minute (on-demand revalidation
+// from the editor keeps it instantly fresh on edits).
+export const revalidate = 60;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const data = await getPost(id);
+  if (!data) return { title: "Post not found" };
+  const { post } = data;
+  const desc = post.excerpt ?? `A story from ${SITE_NAME}.`;
+  const url = `${SITE_URL}/blogs/${post.id}`;
+  const images = post.cover_image ? [{ url: post.cover_image }] : undefined;
+  return {
+    title: post.title,
+    description: desc,
+    alternates: { canonical: `/blogs/${post.id}` },
+    openGraph: {
+      type: "article",
+      title: post.title,
+      description: desc,
+      url,
+      publishedTime: post.created_at,
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: desc,
+      images: post.cover_image ? [post.cover_image] : undefined,
+    },
+  };
+}
 
 export default async function BlogDetailPage({
   params,
@@ -17,27 +75,29 @@ export default async function BlogDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const data = await getPost(id);
+  if (!data) notFound();
+  const { post, sections } = data;
 
-  const { data: blog } = await supabase
-    .from("blogs")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (!blog) notFound();
-  const post = blog as Blog;
-
-  const { data: sectionsData } = await supabase
-    .from("blog_sections")
-    .select("*")
-    .eq("blog_id", id)
-    .order("position", { ascending: true });
-
-  const sections = (sectionsData ?? []) as BlogSection[];
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt ?? undefined,
+    image: post.cover_image ? [post.cover_image] : undefined,
+    datePublished: post.created_at,
+    dateModified: post.created_at,
+    author: { "@type": "Person", name: "Itsuki Nakano" },
+    publisher: { "@type": "Organization", name: SITE_NAME },
+    mainEntityOfPage: `${SITE_URL}/blogs/${post.id}`,
+  };
 
   return (
     <article className="mx-auto max-w-[1000px] px-6 py-8 md:px-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="flex items-center justify-between">
         <Link
           href="/blogs"

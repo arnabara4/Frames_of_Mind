@@ -5,32 +5,58 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/components/AuthProvider";
 import LottieBackground from "@/components/LottieBackground";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
 
-// Display — soft, warm old-style serif. Carries the autumn-literary character.
+// `display: swap` + a fallback prevent FOIT and minimise CLS as fonts load.
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
   style: ["normal", "italic"],
+  display: "swap",
+  fallback: ["Georgia", "serif"],
 });
 
-// Prose & quotes — calligraphic serif, tuned for comfortable on-screen reading.
 const lora = Lora({
   variable: "--font-lora",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
+  display: "swap",
+  fallback: ["Georgia", "serif"],
 });
 
-// UI — clean neutral sans for nav, meta, buttons.
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+  fallback: ["system-ui", "Arial", "sans-serif"],
 });
 
 export const metadata: Metadata = {
-  title: "Frames of Mind",
-  description: "A sanctuary of words by Arnab Jena.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} — A Sanctuary of Words`,
+    template: `%s · ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: ["blog", "journal", "autumn", "writing", "stories", "Frames of Mind"],
+  authors: [{ name: "Itsuki Nakano" }],
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — A Sanctuary of Words`,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — A Sanctuary of Words`,
+    description: SITE_DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
+  alternates: { canonical: "/" },
 };
 
 export default function RootLayout({
