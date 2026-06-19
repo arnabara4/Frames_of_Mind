@@ -100,29 +100,34 @@ export default function AboutBlockView({
     case "split": {
       const pct = block.img_pct ?? 50;
       const h = block.img_h ?? 256;
-      const floatCls =
-        block.img_side === "right"
-          ? "float-right ml-6 mb-3"
-          : "float-left mr-6 mb-3";
-      // flow-root contains the float so the text wraps around the image.
+      const img = (
+        <div style={{ flexBasis: `${pct}%`, height: h }} className="min-w-0 shrink-0">
+          <Thumb src={block.image_url} alt="About image" seed={index} framed className="h-full w-full" />
+        </div>
+      );
+      const text = (
+        <div
+          style={{ transform: `translate(${block.text_x ?? 0}px, ${block.text_y ?? 0}px)` }}
+          className={`min-w-0 flex-1 self-center whitespace-pre-wrap leading-relaxed text-bark/85 ${font} ${size} ${align}`}
+        >
+          {renderRich(block.content) || (
+            <span className="text-ink/30">Text beside the image…</span>
+          )}
+        </div>
+      );
       return (
-        <div className="[display:flow-root]">
-          <div
-            style={{ width: `${pct}%`, height: h, maxWidth: "100%" }}
-            className={floatCls}
-          >
-            <Thumb src={block.image_url} alt="About image" seed={index} framed className="h-full w-full" />
-          </div>
-          <div
-            style={{
-              transform: `translate(${block.text_x ?? 0}px, ${block.text_y ?? 0}px)`,
-            }}
-            className={`${font} ${size} whitespace-pre-wrap leading-relaxed text-bark/85 ${align}`}
-          >
-            {renderRich(block.content) || (
-              <span className="text-ink/30">Text wraps around the image…</span>
-            )}
-          </div>
+        <div className="flex flex-col gap-6 md:flex-row md:items-stretch">
+          {block.img_side === "right" ? (
+            <>
+              {text}
+              {img}
+            </>
+          ) : (
+            <>
+              {img}
+              {text}
+            </>
+          )}
         </div>
       );
     }

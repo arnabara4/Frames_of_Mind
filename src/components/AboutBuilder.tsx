@@ -286,10 +286,8 @@ function PreviewItem({
   onResize: (pct: number, h: number) => void;
   onMoveText: (x: number, y: number) => void;
 }) {
-  const wrapClass = `group relative cursor-pointer rounded-xl p-2 transition ${
-    selected
-      ? "bg-white/50 ring-2 ring-coral"
-      : "hover:bg-white/30 hover:ring-1 hover:ring-coral/30"
+  const wrapClass = `group relative cursor-pointer rounded-xl p-3 transition ${
+    selected ? "bg-white/45" : "hover:bg-white/25"
   }`;
 
   if (block.kind === "image") {
@@ -316,26 +314,41 @@ function PreviewItem({
   }
 
   if (block.kind === "split") {
-    const floatCls =
-      block.img_side === "right" ? "float-right ml-6 mb-3" : "float-left mr-6 mb-3";
+    const img = (
+      <ResizableImage
+        src={block.image_url}
+        seed={index}
+        pct={block.img_pct ?? 50}
+        h={block.img_h ?? 256}
+        selected={selected}
+        onResize={onResize}
+        basis
+      />
+    );
+    const text = (
+      <div className="min-w-0 flex-1 self-center">
+        <DraggableText
+          block={block}
+          onSelect={onSelect}
+          onMove={onMoveText}
+          selected={selected}
+        />
+      </div>
+    );
     return (
       <div onClick={onSelect} className={wrapClass}>
-        <div className="[display:flow-root]">
-          <ResizableImage
-            src={block.image_url}
-            seed={index}
-            pct={block.img_pct ?? 50}
-            h={block.img_h ?? 256}
-            selected={selected}
-            onResize={onResize}
-            floatClass={floatCls}
-          />
-          <DraggableText
-            block={block}
-            onSelect={onSelect}
-            onMove={onMoveText}
-            selected={selected}
-          />
+        <div className="flex flex-col gap-6 md:flex-row md:items-stretch">
+          {block.img_side === "right" ? (
+            <>
+              {text}
+              {img}
+            </>
+          ) : (
+            <>
+              {img}
+              {text}
+            </>
+          )}
         </div>
       </div>
     );
@@ -428,7 +441,7 @@ function ResizableImage({
   h,
   selected,
   onResize,
-  floatClass = "",
+  basis = false,
 }: {
   src: string | null;
   seed: number;
@@ -436,7 +449,7 @@ function ResizableImage({
   h: number;
   selected: boolean;
   onResize: (pct: number, h: number) => void;
-  floatClass?: string;
+  basis?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -470,21 +483,27 @@ function ResizableImage({
   return (
     <div
       ref={ref}
-      style={{ width: `${pct}%`, height: `${h}px`, maxWidth: "100%" }}
-      className={`group/img relative ${floatClass}`}
+      style={
+        basis
+          ? { flexBasis: `${pct}%`, height: `${h}px` }
+          : { width: `${pct}%`, height: `${h}px`, maxWidth: "100%" }
+      }
+      className={`group/img relative ${basis ? "min-w-0 shrink-0" : ""}`}
     >
       <Thumb src={src} alt="About image" seed={seed} framed className="h-full w-full" />
 
       <div
         className={`pointer-events-none absolute inset-0 rounded-2xl transition ${
-          selected ? "ring-2 ring-coral" : "opacity-0 ring-2 ring-coral/40 group-hover/img:opacity-100"
+          selected
+            ? "ring-1 ring-coral/70"
+            : "opacity-0 ring-1 ring-coral/30 group-hover/img:opacity-100"
         }`}
       />
       {HANDLES.map((hd, i) => (
         <span
           key={i}
           onPointerDown={(e) => start(e, hd.sx, hd.sy)}
-          className={`absolute ${hd.pos} ${hd.cursor} z-10 h-3 w-3 rounded-sm border-2 border-coral bg-white shadow transition ${
+          className={`absolute ${hd.pos} ${hd.cursor} z-10 h-2.5 w-2.5 rounded-full border border-coral bg-white shadow-sm transition ${
             selected ? "opacity-100" : "opacity-0 group-hover/img:opacity-100"
           }`}
         />
