@@ -9,64 +9,61 @@ import { StaggerGrid, StaggerItem } from "@/components/motion";
 
 const PER_PAGE = 8;
 
-type Period = "all" | "week" | "month" | "year";
-type Sort = "newest" | "oldest";
-
-const PERIODS: { value: Period; label: string }[] = [
-  { value: "all", label: "All Seasons" },
-  { value: "week", label: "This Week" },
-  { value: "month", label: "This Month" },
-  { value: "year", label: "This Year" },
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
-
-function withinPeriod(iso: string, period: Period): boolean {
-  if (period === "all") return true;
-  const now = Date.now();
-  const t = new Date(iso).getTime();
-  const day = 86_400_000;
-  const span =
-    period === "week" ? 7 * day : period === "month" ? 30 * day : 365 * day;
-  return now - t <= span;
-}
 
 export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
   const { owner } = useAuth();
   const [query, setQuery] = useState("");
-  const [period, setPeriod] = useState<Period>("all");
-  const [sort, setSort] = useState<Sort>("newest");
+  const [year, setYear] = useState<"all" | number>("all");
+  const [month, setMonth] = useState<"all" | number>("all");
   const [page, setPage] = useState(1);
   const [goto, setGoto] = useState("");
 
+  // Distinct years present in the blogs, newest first.
+  const years = useMemo(() => {
+    const set = new Set<number>();
+    blogs.forEach((b) => set.add(new Date(b.created_at).getFullYear()));
+    return [...set].sort((a, b) => b - a);
+  }, [blogs]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = blogs
-      .filter((b) => withinPeriod(b.created_at, period))
-      .filter(
-        (b) =>
-          !q ||
-          b.title.toLowerCase().includes(q) ||
-          (b.excerpt ?? "").toLowerCase().includes(q),
-      );
-    list.sort((a, b) => {
-      const da = new Date(a.created_at).getTime();
-      const db = new Date(b.created_at).getTime();
-      return sort === "newest" ? db - da : da - db;
+    const list = blogs.filter((b) => {
+      const d = new Date(b.created_at);
+      if (year !== "all" && d.getFullYear() !== year) return false;
+      if (month !== "all" && d.getMonth() !== month) return false;
+      if (
+        q &&
+        !b.title.toLowerCase().includes(q) &&
+        !(b.excerpt ?? "").toLowerCase().includes(q)
+      )
+        return false;
+      return true;
     });
+    // Always newest first.
+    list.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
     return list;
-  }, [blogs, query, period, sort]);
+  }, [blogs, query, year, month]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
 
-  // Keep the page valid when filters shrink the result set.
   useEffect(() => {
     setPage(1);
-  }, [query, period, sort]);
+  }, [query, year, month]);
   useEffect(() => {
     if (page > pageCount) setPage(pageCount);
   }, [page, pageCount]);
 
   const start = (page - 1) * PER_PAGE;
   const pageItems = filtered.slice(start, start + PER_PAGE);
+
+  const hasFilter = year !== "all" || month !== "all" || query.trim();
 
   function jump() {
     const n = parseInt(goto, 10);
@@ -104,7 +101,7 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
         )}
       </div>
 
-      {/* ── Filter bar — styled as a warm autumn shelf, part of the page ── */}
+      {/* ── Filter shelf — part of the page, autumn-styled ── */}
       <div className="mt-8 rounded-[28px] border border-maple/15 bg-gradient-to-br from-peach/40 via-cream/60 to-salmon/25 p-4 shadow-[var(--shadow-warm)] backdrop-blur md:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Search */}
@@ -121,64 +118,61 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
             />
           </div>
 
-          {/* Period chips */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 text-xs font-semibold uppercase tracking-widest text-maple/60">
-              🍂 Season
-            </span>
-            {PERIODS.map((p) => (
-              <button
-                key={p.value}
-                onClick={() => setPeriod(p.value)}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition active:scale-95 ${
-                  period === p.value
-                    ? "bg-coral text-white shadow-sm"
-                    : "bg-white/70 text-bark/70 hover:bg-white hover:text-coral"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Sort */}
-          <div className="flex items-center gap-1.5">
+          {/* Month + Year pickers */}
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-widest text-maple/60">
-              Sort
+              🍂 Filter by date
             </span>
-            <div className="flex overflow-hidden rounded-full ring-1 ring-maple/20">
-              {(["newest", "oldest"] as Sort[]).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSort(s)}
-                  className={`px-3.5 py-1.5 text-xs font-semibold capitalize transition ${
-                    sort === s
-                      ? "bg-coral text-white"
-                      : "bg-white/70 text-bark/70 hover:text-coral"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
+            <Select
+              label="Month"
+              value={month === "all" ? "all" : String(month)}
+              onChange={(v) => setMonth(v === "all" ? "all" : Number(v))}
+              options={[
+                { value: "all", label: "All months" },
+                ...MONTHS.map((m, i) => ({ value: String(i), label: m })),
+              ]}
+            />
+            <Select
+              label="Year"
+              value={year === "all" ? "all" : String(year)}
+              onChange={(v) => setYear(v === "all" ? "all" : Number(v))}
+              options={[
+                { value: "all", label: "All years" },
+                ...years.map((y) => ({ value: String(y), label: String(y) })),
+              ]}
+            />
+            {hasFilter && (
+              <button
+                onClick={() => {
+                  setQuery("");
+                  setMonth("all");
+                  setYear("all");
+                }}
+                className="rounded-full px-3 py-1.5 text-xs font-semibold text-coral underline-offset-2 transition hover:underline"
+              >
+                Clear
+              </button>
+            )}
           </div>
         </div>
 
         {/* Result line */}
         <p className="mt-3 px-1 text-xs text-bark/55">
           {filtered.length} {filtered.length === 1 ? "story" : "stories"}
-          {query && ` matching “${query}”`} · page {page} of {pageCount}
+          {month !== "all" && ` · ${MONTHS[month]}`}
+          {year !== "all" && ` ${year}`}
+          {query && ` · matching “${query}”`} · page {page} of {pageCount}
         </p>
       </div>
 
       {/* ── Grid ── */}
       {filtered.length === 0 ? (
         <p className="mt-12 text-center text-bark/50">
-          No stories here yet — try a different season. 🍁
+          No stories from this time — try another month or year. 🍁
         </p>
       ) : (
         <StaggerGrid
-          key={`${query}-${period}-${sort}-${page}`}
+          key={`${query}-${month}-${year}-${page}`}
           className="mt-10 grid grid-cols-1 items-start gap-8 md:grid-cols-2"
         >
           {pageItems.map((b, i) => (
@@ -251,6 +245,38 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
         </div>
       )}
     </div>
+  );
+}
+
+function Select({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <label className="relative">
+      <span className="sr-only">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="cursor-pointer appearance-none rounded-full border border-maple/20 bg-white/80 py-2 pl-4 pr-9 text-sm font-medium text-bark/80 outline-none transition hover:border-coral focus:border-coral"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-maple/60">
+        ▾
+      </span>
+    </label>
   );
 }
 
