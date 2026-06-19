@@ -6,6 +6,9 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import AboutBlockEditor, { type DraftBlock } from "@/components/AboutBlockEditor";
 import AboutBlockView from "@/components/AboutBlockView";
+import Thumb from "@/components/Thumb";
+import { renderRich } from "@/lib/format";
+import { ALIGN_CLASS, FONT_CLASS, SIZE_CLASS } from "@/lib/types";
 import type { AboutBlock, AboutKind } from "@/lib/types";
 
 const ADD: { kind: AboutKind; label: string; icon: string }[] = [
@@ -233,7 +236,8 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
   );
 }
 
-/** A preview block: click to select; image/split blocks get a drag-resize handle. */
+/** A preview block: click to select. Image/split blocks render a resizable
+ *  image box with MS-Word-style corner/edge handles. */
 function PreviewItem({
   block,
   index,
@@ -247,53 +251,179 @@ function PreviewItem({
   onSelect: () => void;
   onResize: (pct: number) => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const hasImage = block.kind === "image" || block.kind === "split";
-  const pct = block.img_pct ?? (block.kind === "split" ? 50 : 100);
-  const rightSide = block.kind === "split" && block.img_side === "right";
-  const handleLeft = rightSide ? 100 - pct : pct;
+  const isImage = block.kind === "image";
+  const isSplit = block.kind === "split";
 
-  function startDrag(e: React.PointerEvent) {
+  const wrapClass = `group relative cursor-pointer rounded-xl p-2 transition ${
+    selected
+      ? "bg-white/50 ring-2 ring-coral"
+      : "hover:bg-white/30 hover:ring-1 hover:ring-coral/30"
+  }`;
+
+  if (isImage) {
+    const pct = block.img_pct ?? 100;
+    const justify =
+      block.align === "left"
+        ? "justify-start"
+        : block.align === "right"
+          ? "justify-end"
+          : "justify-center";
+    return (
+      <div onClick={onSelect} className={wrapClass}>
+        <div className={`flex w-full ${justify}`}>
+          <ResizableImage
+            src={block.image_url}
+            seed={index}
+            pct={pct}
+            selected={selected}
+            onResize={onResize}
+            height="h-72"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (isSplit) {
+    const pct = block.img_pct ?? 50;
+    const text = (
+      <div
+        className={`min-w-0 flex-1 self-center whitespace-pre-wrap leading-relaxed text-bark/85 ${FONT_CLASS[block.font]} ${SIZE_CLASS[block.size]} ${ALIGN_CLASS[block.align]}`}
+      >
+        {renderRich(block.content) || (
+          <span className="text-ink/30">Text beside the image…</span>
+        )}
+      </div>
+    );
+    const img = (
+      <div style={{ flexBasis: `${pct}%` }} className="min-w-0 shrink-0">
+        <ResizableImage
+          src={block.image_url}
+          seed={index}
+          pct={pct}
+          selected={selected}
+          onResize={onResize}
+          side={block.img_side}
+          basisMode
+          height="h-64"
+        />
+      </div>
+    );
+    return (
+      <div onClick={onSelect} className={wrapClass}>
+        <div className="flex flex-col items-stretch gap-5 md:flex-row">
+          {block.img_side === "right" ? (
+            <>
+              {text}
+              {img}
+            </>
+          ) : (
+            <>
+              {img}
+              {text}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div onClick={onSelect} className={wrapClass}>
+      <AboutBlockView block={block} index={index} />
+    </div>
+  );
+}
+
+const HANDLES: {
+  pos: string;
+  cursor: string;
+  sign: number;
+}[] = [
+  { pos: "-left-1.5 -top-1.5", cursor: "cursor-nwse-resize", sign: -1 },
+  { pos: "left-1/2 -top-1.5 -translate-x-1/2", cursor: "cursor-ns-resize", sign: 1 },
+  { pos: "-right-1.5 -top-1.5", cursor: "cursor-nesw-resize", sign: 1 },
+  { pos: "-right-1.5 top-1/2 -translate-y-1/2", cursor: "cursor-ew-resize", sign: 1 },
+  { pos: "-right-1.5 -bottom-1.5", cursor: "cursor-nwse-resize", sign: 1 },
+  { pos: "left-1/2 -bottom-1.5 -translate-x-1/2", cursor: "cursor-ns-resize", sign: 1 },
+  { pos: "-left-1.5 -bottom-1.5", cursor: "cursor-nesw-resize", sign: -1 },
+  { pos: "-left-1.5 top-1/2 -translate-y-1/2", cursor: "cursor-ew-resize", sign: -1 },
+];
+
+/** Image with MS-Word-style selection handles. Dragging a handle resizes the
+ *  image width as a percentage of its container. */
+function ResizableImage({
+  src,
+  seed,
+  pct,
+  selected,
+  onResize,
+  side = "left",
+  basisMode = false,
+  height,
+}: {
+  src: string | null;
+  seed: number;
+  pct: number;
+  selected: boolean;
+  onResize: (pct: number) => void;
+  side?: "left" | "right";
+  basisMode?: boolean;
+  height: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  function start(e: React.PointerEvent, sign: number) {
     e.preventDefault();
     e.stopPropagation();
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const onMove = (ev: PointerEvent) => {
-      let p = ((ev.clientX - rect.left) / rect.width) * 100;
-      if (rightSide) p = 100 - p;
-      onResize(Math.max(20, Math.min(100, Math.round(p))));
+    const wrap = ref.current;
+    if (!wrap) return;
+    // Resize % is measured against: the split row (basisMode) or the image
+    // block's alignment row (image mode).
+    const container = basisMode
+      ? wrap.parentElement?.parentElement
+      : wrap.parentElement;
+    const pw = container?.getBoundingClientRect().width ?? 1;
+    const startX = e.clientX;
+    const startPct = pct;
+    // A right-side split image grows when you drag its left edge outward.
+    const dir = basisMode && side === "right" ? -1 : 1;
+    const move = (ev: PointerEvent) => {
+      const dPct = ((ev.clientX - startX) / pw) * 100 * sign * dir;
+      onResize(Math.max(15, Math.min(100, Math.round(startPct + dPct))));
     };
-    const onUp = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
     };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
   }
 
   return (
     <div
       ref={ref}
-      onClick={onSelect}
-      className={`group relative cursor-pointer rounded-xl p-2 transition ${
-        selected ? "bg-white/50 ring-2 ring-coral" : "hover:bg-white/30 hover:ring-1 hover:ring-coral/30"
-      }`}
+      style={basisMode ? undefined : { width: `${pct}%` }}
+      className="group/img relative"
     >
-      <AboutBlockView block={block} index={index} />
+      <Thumb src={src} alt="About image" seed={seed} framed className={`${height} w-full`} />
 
-      {hasImage && (
-        <div
-          onPointerDown={startDrag}
-          title="Drag to resize image"
-          style={{ left: `calc(${handleLeft}% - 6px)` }}
-          className={`absolute top-1/2 z-10 hidden h-12 w-3 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-full bg-coral/80 shadow-md ring-2 ring-white transition group-hover:flex ${
-            selected ? "flex" : ""
+      {/* Selection outline + handles */}
+      <div
+        className={`pointer-events-none absolute inset-0 rounded-2xl transition ${
+          selected ? "ring-2 ring-coral" : "opacity-0 group-hover/img:opacity-100 ring-2 ring-coral/40"
+        }`}
+      />
+      {HANDLES.map((h, i) => (
+        <span
+          key={i}
+          onPointerDown={(e) => start(e, h.sign)}
+          className={`absolute ${h.pos} ${h.cursor} z-10 h-3 w-3 rounded-sm border-2 border-coral bg-white shadow transition ${
+            selected ? "opacity-100" : "opacity-0 group-hover/img:opacity-100"
           }`}
-        >
-          <span className="text-[8px] leading-none text-white">⇔</span>
-        </div>
-      )}
+        />
+      ))}
     </div>
   );
 }
+
