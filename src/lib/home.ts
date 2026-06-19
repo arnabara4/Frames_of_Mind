@@ -25,7 +25,7 @@ export const DEFAULT_HOME: HomeContent = {
     "A sanctuary of words — where the written self steps forward when the spoken one falters. Pull up a chair; the kettle's warm.",
   ctaPrimary: "Read the journal",
   ctaSecondary: "About me",
-  bgWord: "Pranavi",
+  bgWord: "海",
   frames: [
     { image_url: "", caption: "frames of mind" },
     { image_url: "", caption: "october light" },
