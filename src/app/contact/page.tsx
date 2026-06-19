@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-type Status = "idle" | "sending" | "sent" | "error";
+type Step = "compose" | "verify" | "sent";
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -13,15 +13,10 @@ export default function ContactPage() {
     body: "",
   });
   const [website, setWebsite] = useState(""); // honeypot
-  const [status, setStatus] = useState<Status>("idle");
-  const [error, setError] = useState<string | null>(null);
-
-  // Email verification (OTP) state
-  const [otpStage, setOtpStage] = useState<"idle" | "sent" | "verified">("idle");
+  const [step, setStep] = useState<Step>("compose");
   const [code, setCode] = useState("");
-  const [token, setToken] = useState<string | null>(null);
-  const [otpBusy, setOtpBusy] = useState(false);
-  const [otpMsg, setOtpMsg] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
 
@@ -30,18 +25,15 @@ export default function ContactPage() {
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  // Changing the email invalidates any prior verification.
-  const onEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((f) => ({ ...f, email: e.target.value }));
-    setOtpStage("idle");
-    setToken(null);
-    setCode("");
-    setOtpMsg(null);
-  };
-
-  async function sendCode() {
-    setOtpBusy(true);
-    setOtpMsg(null);
+  // Step 1 — validate, then email a code and reveal the verify step.
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!form.first_name.trim() || !emailValid || !form.body.trim()) {
+      setError("Please fill in your name, a valid email, and a message.");
+      return;
+    }
+    setBusy(true);
     try {
       const res = await fetch("/api/otp/send", {
         method: "POST",
@@ -49,71 +41,65 @@ export default function ContactPage() {
         body: JSON.stringify({ email: form.email }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) {
-        setOtpMsg(data.error ?? "Couldn't send a code.");
-      } else {
-        setOtpStage("sent");
-        setOtpMsg("Code sent — check your inbox.");
+      if (!res.ok || !data.ok) setError(data.error ?? "Couldn't send a code.");
+      else {
+        setStep("verify");
+        setCode("");
       }
     } catch {
-      setOtpMsg("Network error — try again.");
+      setError("Network error — please try again.");
     }
-    setOtpBusy(false);
+    setBusy(false);
   }
 
-  async function confirmCode() {
-    setOtpBusy(true);
-    setOtpMsg(null);
+  async function resend() {
+    setError(null);
+    setBusy(true);
     try {
-      const res = await fetch("/api/otp/verify", {
+      await fetch("/api/otp/send", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: form.email }),
+      });
+    } catch {}
+    setBusy(false);
+  }
+
+  // Step 2 — verify the code, then actually send the message.
+  async function handleConfirm() {
+    if (code.length < 6) return;
+    setError(null);
+    setBusy(true);
+    try {
+      const v = await fetch("/api/otp/verify", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email: form.email, code }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) {
-        setOtpMsg(data.error ?? "Invalid code.");
-      } else {
-        setToken(data.token);
-        setOtpStage("verified");
-        setOtpMsg(null);
+      const vData = await v.json().catch(() => ({}));
+      if (!v.ok || !vData.ok) {
+        setError(vData.error ?? "Invalid code.");
+        setBusy(false);
+        return;
       }
-    } catch {
-      setOtpMsg("Network error — try again.");
-    }
-    setOtpBusy(false);
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!token) {
-      setStatus("error");
-      setError("Please verify your email first.");
-      return;
-    }
-    setStatus("sending");
-    setError(null);
-    try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, website, token }),
+        body: JSON.stringify({ ...form, website, token: vData.token }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        setStatus("error");
         setError(data.error ?? "Could not send — try again.");
+        setBusy(false);
         return;
       }
-      setStatus("sent");
+      setStep("sent");
       setForm({ first_name: "", last_name: "", email: "", body: "" });
-      setOtpStage("idle");
-      setToken(null);
       setCode("");
     } catch {
-      setStatus("error");
       setError("Network error — please try again.");
     }
+    setBusy(false);
   }
 
   return (
@@ -154,8 +140,14 @@ export default function ContactPage() {
               <span className="grid h-9 w-9 place-items-center rounded-full bg-white/70 text-coral">
                 ✉
               </span>
+              <span className="text-sm">Use the form — it reaches me directly.</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-white/70 text-coral">
+                🔒
+              </span>
               <span className="text-sm">
-                Use the form — it reaches me directly.
+                A quick email check keeps the mailbox spam-free.
               </span>
             </li>
             <li className="flex items-center gap-3">
@@ -166,9 +158,7 @@ export default function ContactPage() {
             </li>
           </ul>
 
-          <p className="mt-10 font-script text-2xl text-coral/80">
-            — Pranavi
-          </p>
+          <p className="mt-10 font-script text-2xl text-coral/80">— Pranavi</p>
         </motion.aside>
 
         {/* ── Form card ── */}
@@ -179,7 +169,8 @@ export default function ContactPage() {
           className="rounded-[32px] border border-maple/15 bg-white/85 p-8 shadow-sm backdrop-blur md:p-10"
         >
           <AnimatePresence mode="wait">
-            {status === "sent" ? (
+            {/* ── Success ── */}
+            {step === "sent" ? (
               <motion.div
                 key="thanks"
                 initial={{ opacity: 0, scale: 0.96 }}
@@ -202,22 +193,87 @@ export default function ContactPage() {
                   Thank you for writing. I&apos;ll get back to you soon.
                 </p>
                 <button
-                  onClick={() => setStatus("idle")}
+                  onClick={() => setStep("compose")}
                   className="mt-8 rounded-full border border-coral/40 px-6 py-2.5 text-sm font-semibold uppercase tracking-wider text-coral transition hover:bg-coral hover:text-white active:scale-95"
                 >
                   Send another
                 </button>
               </motion.div>
+            ) : step === "verify" ? (
+              /* ── Verify step ── */
+              <motion.div
+                key="verify"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center py-6 text-center"
+              >
+                <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-peach to-salmon text-3xl">
+                  ✉
+                </div>
+                <h2 className="mt-5 font-display text-2xl font-bold text-coral">
+                  Check your inbox
+                </h2>
+                <p className="mt-2 max-w-sm text-sm leading-relaxed text-bark/70">
+                  To make sure I can write back, enter the 6-digit code we just
+                  emailed to{" "}
+                  <span className="font-semibold text-bark">{form.email}</span>.
+                </p>
+
+                <input
+                  inputMode="numeric"
+                  maxLength={6}
+                  autoFocus
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
+                  placeholder="------"
+                  className="mt-6 w-56 rounded-2xl border border-maple/25 bg-cream/40 px-4 py-4 text-center text-3xl font-bold tracking-[0.5em] text-coral outline-none transition focus:border-coral focus:bg-white"
+                />
+
+                {error && (
+                  <p className="mt-3 text-sm text-coral-dark">{error}</p>
+                )}
+
+                <button
+                  onClick={handleConfirm}
+                  disabled={busy || code.length < 6}
+                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-coral px-9 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[var(--shadow-warm)] transition hover:bg-coral-dark active:scale-95 disabled:opacity-50"
+                >
+                  {busy ? "Sending…" : "Confirm & send 🍃"}
+                </button>
+
+                <div className="mt-5 flex items-center gap-4 text-xs">
+                  <button
+                    onClick={resend}
+                    disabled={busy}
+                    className="font-medium text-coral hover:underline disabled:opacity-50"
+                  >
+                    Resend code
+                  </button>
+                  <span className="text-bark/30">·</span>
+                  <button
+                    onClick={() => {
+                      setStep("compose");
+                      setError(null);
+                    }}
+                    className="font-medium text-bark/50 hover:text-bark"
+                  >
+                    Edit my message
+                  </button>
+                </div>
+              </motion.div>
             ) : (
+              /* ── Compose step ── */
               <motion.form
                 key="form"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onSubmit={handleSubmit}
+                onSubmit={handleSend}
                 className="flex flex-col gap-5"
               >
-                {/* Honeypot — hidden from humans, catches bots */}
+                {/* Honeypot */}
                 <input
                   type="text"
                   name="website"
@@ -229,94 +285,10 @@ export default function ContactPage() {
                   className="absolute left-[-9999px] h-0 w-0 opacity-0"
                 />
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <Field
-                    label="First Name"
-                    required
-                    value={form.first_name}
-                    onChange={set("first_name")}
-                    placeholder="Pranavi"
-                  />
-                  <Field
-                    label="Last Name"
-                    value={form.last_name}
-                    onChange={set("last_name")}
-                    placeholder="Singhal"
-                  />
+                  <Field label="First Name" required value={form.first_name} onChange={set("first_name")} placeholder="Pranavi" />
+                  <Field label="Last Name" value={form.last_name} onChange={set("last_name")} placeholder="Singhal" />
                 </div>
-                <div>
-                  <Field
-                    label="Email"
-                    type="email"
-                    required
-                    value={form.email}
-                    onChange={onEmail}
-                    placeholder="you@example.com"
-                  />
-
-                  {/* Email verification (OTP) */}
-                  <div className="mt-2">
-                    {otpStage === "verified" ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1.5 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-500/20">
-                        ✓ Email verified
-                      </span>
-                    ) : otpStage === "sent" ? (
-                      <div className="flex flex-col gap-2 rounded-xl border border-maple/20 bg-cream/40 p-3">
-                        <p className="text-xs text-bark/60">
-                          Enter the 6-digit code sent to{" "}
-                          <span className="font-semibold">{form.email}</span>.
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <input
-                            inputMode="numeric"
-                            maxLength={6}
-                            value={code}
-                            onChange={(e) =>
-                              setCode(e.target.value.replace(/\D/g, ""))
-                            }
-                            placeholder="123456"
-                            className="w-32 rounded-lg border border-maple/20 bg-white px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-coral"
-                          />
-                          <button
-                            type="button"
-                            onClick={confirmCode}
-                            disabled={otpBusy || code.length < 6}
-                            className="rounded-full bg-coral px-5 py-2 text-sm font-semibold text-white transition hover:bg-coral-dark active:scale-95 disabled:opacity-50"
-                          >
-                            {otpBusy ? "Checking…" : "Confirm"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={sendCode}
-                            disabled={otpBusy}
-                            className="text-xs font-medium text-coral hover:underline"
-                          >
-                            Resend
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-1.5">
-                        <button
-                          type="button"
-                          onClick={sendCode}
-                          disabled={!emailValid || otpBusy}
-                          className="w-fit rounded-full border border-coral/40 px-4 py-1.5 text-sm font-semibold text-coral transition hover:bg-coral hover:text-white active:scale-95 disabled:opacity-50"
-                        >
-                          {otpBusy ? "Sending…" : "✉ Verify email to send"}
-                        </button>
-                        <p className="text-xs leading-relaxed text-bark/50">
-                          🍂 A quick one-time step — we&apos;ll email you a 6-digit
-                          code to confirm it&apos;s really you. Keeps the mailbox
-                          spam-free, and means I can actually write back.
-                        </p>
-                      </div>
-                    )}
-                    {otpMsg && (
-                      <p className="mt-1.5 text-xs text-bark/60">{otpMsg}</p>
-                    )}
-                  </div>
-                </div>
-
+                <Field label="Email" type="email" required value={form.email} onChange={set("email")} placeholder="you@example.com" />
                 <label className="block">
                   <span className="text-xs font-semibold uppercase tracking-widest text-maple/70">
                     Message
@@ -331,27 +303,26 @@ export default function ContactPage() {
                   />
                 </label>
 
-                {status === "error" && (
+                {error && (
                   <p className="rounded-lg bg-coral/10 px-4 py-2 text-sm text-coral-dark">
                     {error}
                   </p>
                 )}
 
-                <motion.button
-                  type="submit"
-                  disabled={status === "sending" || !token}
-                  whileTap={{ scale: 0.97 }}
-                  title={!token ? "Verify your email first" : undefined}
-                  className="mt-1 inline-flex items-center justify-center gap-2 self-start rounded-full bg-coral px-9 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[var(--shadow-warm)] transition hover:bg-coral-dark disabled:opacity-50"
-                >
-                  {status === "sending" ? (
-                    "Sending…"
-                  ) : (
-                    <>
-                      Send message <span className="text-base">🍃</span>
-                    </>
-                  )}
-                </motion.button>
+                <div className="mt-1 flex flex-col gap-2">
+                  <motion.button
+                    type="submit"
+                    disabled={busy}
+                    whileTap={{ scale: 0.97 }}
+                    className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-coral px-9 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[var(--shadow-warm)] transition hover:bg-coral-dark disabled:opacity-60"
+                  >
+                    {busy ? "Just a moment…" : <>Send message <span className="text-base">🍃</span></>}
+                  </motion.button>
+                  <p className="text-xs text-bark/45">
+                    🔒 One quick step next — we&apos;ll email a 6-digit code to
+                    confirm your address before your message is sent.
+                  </p>
+                </div>
               </motion.form>
             )}
           </AnimatePresence>
