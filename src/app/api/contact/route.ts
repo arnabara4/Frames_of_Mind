@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { rateLimit, sweep } from "@/lib/ratelimit";
 import { getClientIp } from "@/lib/ip";
-import { verifyToken } from "@/lib/otp";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -43,14 +42,6 @@ export async function POST(req: Request) {
     !message || message.length > 5000
   ) {
     return NextResponse.json({ ok: false, error: "Please check your details." }, { status: 400 });
-  }
-
-  // Require a valid proof-of-verification token for this email (OTP gate).
-  if (!verifyToken(String(body.token ?? ""), email)) {
-    return NextResponse.json(
-      { ok: false, error: "Please verify your email first." },
-      { status: 401 },
-    );
   }
 
   const supabase = createPublicClient();
