@@ -4,6 +4,7 @@ import type { Blog } from "@/lib/types";
 import { BlogRow } from "@/components/BlogCard";
 import HomeGreeting from "@/components/HomeGreeting";
 import FloatFrame from "@/components/FloatFrame";
+import InstallButton from "@/components/pwa/InstallButton";
 import { Reveal, StaggerGrid, StaggerItem } from "@/components/motion";
 import { mergeHome } from "@/lib/home";
 
@@ -25,6 +26,11 @@ export default async function HomePage() {
 
   return (
     <div id="top">
+      {/* Owner-only install button (top-right) */}
+      <div className="mx-auto flex max-w-[1440px] justify-end px-6 pt-4 md:px-10">
+        <InstallButton />
+      </div>
+
       {/* ───────────────── Hero ───────────────── */}
       <section className="relative overflow-hidden">
         {/* faint oversized seasonal word behind the hero */}

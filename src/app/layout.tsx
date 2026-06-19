@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Lora, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -6,7 +6,14 @@ import Footer from "@/components/Footer";
 import { AuthProvider } from "@/components/AuthProvider";
 import LottieBackground from "@/components/LottieBackground";
 import DeferUntilIdle from "@/components/DeferUntilIdle";
+import { InstallProvider } from "@/components/pwa/InstallProvider";
+import InstallPopup from "@/components/pwa/InstallPopup";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
+
+export const viewport: Viewport = {
+  themeColor: "#e35336",
+  colorScheme: "light",
+};
 
 // `display: swap` + a fallback prevent FOIT and minimise CLS as fonts load.
 const fraunces = Fraunces({
@@ -58,6 +65,11 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   alternates: { canonical: "/" },
+  appleWebApp: {
+    capable: true,
+    title: SITE_NAME,
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({
@@ -75,11 +87,14 @@ export default function RootLayout({
           <LottieBackground />
         </DeferUntilIdle>
         <AuthProvider>
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <InstallProvider>
+            <div className="relative z-10 flex min-h-screen flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <InstallPopup />
+          </InstallProvider>
         </AuthProvider>
       </body>
     </html>
