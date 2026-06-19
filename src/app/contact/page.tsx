@@ -295,14 +295,21 @@ export default function ContactPage() {
                         </div>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={sendCode}
-                        disabled={!emailValid || otpBusy}
-                        className="rounded-full border border-coral/40 px-4 py-1.5 text-sm font-semibold text-coral transition hover:bg-coral hover:text-white active:scale-95 disabled:opacity-50"
-                      >
-                        {otpBusy ? "Sending…" : "✉ Verify email to send"}
-                      </button>
+                      <div className="flex flex-col gap-1.5">
+                        <button
+                          type="button"
+                          onClick={sendCode}
+                          disabled={!emailValid || otpBusy}
+                          className="w-fit rounded-full border border-coral/40 px-4 py-1.5 text-sm font-semibold text-coral transition hover:bg-coral hover:text-white active:scale-95 disabled:opacity-50"
+                        >
+                          {otpBusy ? "Sending…" : "✉ Verify email to send"}
+                        </button>
+                        <p className="text-xs leading-relaxed text-bark/50">
+                          🍂 A quick one-time step — we&apos;ll email you a 6-digit
+                          code to confirm it&apos;s really you. Keeps the mailbox
+                          spam-free, and means I can actually write back.
+                        </p>
+                      </div>
                     )}
                     {otpMsg && (
                       <p className="mt-1.5 text-xs text-bark/60">{otpMsg}</p>
