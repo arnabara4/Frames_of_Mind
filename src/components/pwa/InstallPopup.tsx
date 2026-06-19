@@ -39,11 +39,11 @@ export default function InstallPopup() {
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 60 }}
+          initial={{ opacity: 0, x: 80, y: 0 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          exit={{ opacity: 0, x: 80 }}
           transition={{ type: "spring", stiffness: 320, damping: 30 }}
-          className="fixed inset-x-3 bottom-3 z-[80] mx-auto max-w-md rounded-3xl border border-maple/15 bg-cream/95 p-4 shadow-[0_24px_60px_-20px_rgba(156,52,21,0.55)] backdrop-blur-md sm:inset-x-auto sm:right-5"
+          className="fixed right-3 top-[84px] z-[80] w-[calc(100%-1.5rem)] max-w-sm rounded-3xl border border-maple/15 bg-cream/95 p-4 shadow-[0_24px_60px_-20px_rgba(156,52,21,0.55)] backdrop-blur-md sm:right-5"
         >
           <div className="flex items-start gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
