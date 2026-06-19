@@ -43,7 +43,7 @@ export default async function AdminPage() {
             Owner dashboard
           </p>
           <h1 className="font-display text-4xl font-extrabold text-coral md:text-5xl">
-            Welcome back, Arnab
+            Welcome back, Pranavi
           </h1>
         </div>
         <Link

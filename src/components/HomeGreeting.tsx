@@ -22,7 +22,7 @@ export default function HomeGreeting() {
       className="flex flex-col items-center gap-4"
     >
       <h2 className="font-display text-4xl font-bold text-coral md:text-5xl">
-        WELCOME ARNAB
+        WELCOME PRANAVI
       </h2>
       <motion.div whileHover={hover} whileTap={tap}>
         <Link

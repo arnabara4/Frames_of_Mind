@@ -2,7 +2,7 @@ import type { User } from "@supabase/supabase-js";
 
 /** The single account allowed to write content. Mirrors public.is_owner() in SQL. */
 export const OWNER_EMAIL =
-  process.env.NEXT_PUBLIC_OWNER_EMAIL ?? "owner@framesofmind.app";
+  process.env.NEXT_PUBLIC_OWNER_EMAIL ?? "pranavi@frame.com";
 
 export function isOwner(user: User | null | undefined): boolean {
   return !!user?.email && user.email.toLowerCase() === OWNER_EMAIL.toLowerCase();

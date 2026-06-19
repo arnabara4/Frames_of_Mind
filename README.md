@@ -38,8 +38,8 @@ RLS: blogs/sections are public-read, authenticated-write; messages are public-in
 
 ## Owner login
 ```
-email:    owner@framesofmind.app
-password: Frames@2025
+email:    pranavi@frame.com
+password: pranavi123
 ```
 Any authenticated user is treated as the owner (single-owner model).
 

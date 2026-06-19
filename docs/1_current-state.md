@@ -14,7 +14,7 @@ read-only experience. Backed by a real database, so content and contact messages
 
 - **Repo:** github.com/arnabara4/Blogsite-Project
 - **Dev:** `npm run dev` → http://localhost:3000
-- **Owner login:** `owner@framesofmind.app` / `Frames@2025`
+- **Owner login:** `pranavi@frame.com` / `pranavi123`
 
 ---
 
