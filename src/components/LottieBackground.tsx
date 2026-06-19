@@ -21,7 +21,7 @@ export default function LottieBackground() {
         src="/lottifiles/autumn-fall.lottie"
         loop
         autoplay
-        className="h-full w-full opacity-[0.28]"
+        className="h-full w-full opacity-[0.16] md:opacity-[0.28]"
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
       />
     </div>

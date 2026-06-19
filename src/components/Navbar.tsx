@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import LottiePlayer from "@/components/LottiePlayer";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -80,9 +81,25 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, owner, signOut } = useAuth();
+  const [open, setOpen] = useState(false);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
+
+  // Close the mobile drawer on navigation + lock body scroll while open.
+  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  async function doSignOut() {
+    await signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-maple/10 bg-cream/80 shadow-[0_1px_24px_-16px_rgba(156,52,21,0.5)] backdrop-blur-md">
@@ -106,8 +123,8 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* Nav */}
-        <div className="flex items-center gap-0.5 sm:gap-1.5">
+        {/* Desktop nav */}
+        <div className="hidden items-center gap-0.5 sm:gap-1.5 md:flex">
           {LINKS.map(({ href, label, Icon }) => {
             const active = isActive(href);
             return (
@@ -167,11 +184,7 @@ export default function Navbar() {
 
           {user && (
             <button
-              onClick={async () => {
-                await signOut();
-                router.push("/");
-                router.refresh();
-              }}
+              onClick={doSignOut}
               title="Log out"
               aria-label="Log out"
               className="ml-1 flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-bark/45 transition-colors hover:text-coral md:px-4"
@@ -183,7 +196,135 @@ export default function Navbar() {
             </button>
           )}
         </div>
+
+        {/* Mobile hamburger */}
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          className="flex h-11 w-11 items-center justify-center rounded-xl text-coral transition active:scale-90 md:hidden"
+        >
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            {open ? (
+              <>
+                <path d="M6 6l12 12" />
+                <path d="M18 6L6 18" />
+              </>
+            ) : (
+              <>
+                <path d="M4 7h16" />
+                <path d="M4 12h16" />
+                <path d="M4 17h16" />
+              </>
+            )}
+          </svg>
+        </button>
       </nav>
+
+      {/* Mobile drawer */}
+      <MobileDrawer
+        open={open}
+        onClose={() => setOpen(false)}
+        pathname={pathname}
+        isActive={isActive}
+        owner={owner}
+        user={!!user}
+        onSignOut={doSignOut}
+      />
     </header>
+  );
+}
+
+function MobileDrawer({
+  open,
+  onClose,
+  isActive,
+  owner,
+  user,
+  onSignOut,
+}: {
+  open: boolean;
+  onClose: () => void;
+  pathname: string;
+  isActive: (href: string) => boolean;
+  owner: boolean;
+  user: boolean;
+  onSignOut: () => void;
+}) {
+  const items = [
+    ...LINKS,
+    ...(owner
+      ? [
+          { href: "/admin/messages", label: "Inbox", Icon: Mail },
+          { href: "/admin", label: "Studio", Icon: Grid },
+        ]
+      : []),
+  ];
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-40 bg-bark/30 backdrop-blur-sm md:hidden"
+          />
+          <motion.aside
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 360, damping: 38 }}
+            className="fixed right-0 top-0 z-50 flex h-full w-[78%] max-w-xs flex-col gap-2 border-l border-maple/15 bg-gradient-to-b from-cream to-peach/40 p-5 pt-6 shadow-2xl md:hidden"
+          >
+            <p className="mb-3 px-2 font-script text-lg italic text-maple/70">
+              月が綺麗 — wander in
+            </p>
+            {items.map(({ href, label, Icon }) => {
+              const active = isActive(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={onClose}
+                  className={`flex min-h-[48px] items-center gap-3 rounded-2xl px-4 text-base font-semibold transition active:scale-[0.98] ${
+                    active
+                      ? "bg-coral text-white shadow-sm"
+                      : "text-bark hover:bg-white/70"
+                  }`}
+                >
+                  <span className={active ? "text-white" : "text-coral"}>
+                    <Icon />
+                  </span>
+                  {label}
+                </Link>
+              );
+            })}
+
+            {user && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onSignOut();
+                }}
+                className="mt-2 flex min-h-[48px] items-center gap-3 rounded-2xl px-4 text-base font-semibold text-bark/60 transition hover:bg-white/70 active:scale-[0.98]"
+              >
+                <span className="text-coral">
+                  <LogOut />
+                </span>
+                Log out
+              </button>
+            )}
+
+            <span className="mt-auto px-2 font-serif text-xs italic text-bark/40">
+              Frames of Mind · a gift, in autumn words
+            </span>
+          </motion.aside>
+        </>
+      )}
+    </AnimatePresence>
   );
 }

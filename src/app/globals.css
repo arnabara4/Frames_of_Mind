@@ -83,6 +83,15 @@ body {
   margin-top: 1.25rem;
 }
 
+/* Mobile: keep form text ≥16px so iOS doesn't auto-zoom on focus. */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 /* Respect users who prefer less motion. */
 @media (prefers-reduced-motion: reduce) {
   *,

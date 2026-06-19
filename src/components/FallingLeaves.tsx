@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 /** A single maple-leaf silhouette. */
 function Leaf({ color }: { color: string }) {
@@ -34,10 +34,22 @@ interface Drop {
  */
 export default function FallingLeaves({ count = 14 }: { count?: number }) {
   const reduce = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Thin out the leaves on small screens to protect mobile GPU/scroll perf.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const effectiveCount = isMobile ? Math.ceil(count / 2) : count;
 
   const drops = useMemo<Drop[]>(() => {
     const r = (min: number, max: number) => min + Math.random() * (max - min);
-    return Array.from({ length: count }, () => ({
+    return Array.from({ length: effectiveCount }, () => ({
       left: r(0, 100),
       size: r(16, 34),
       delay: r(0, 12),
@@ -47,7 +59,7 @@ export default function FallingLeaves({ count = 14 }: { count?: number }) {
       color: COLORS[Math.floor(Math.random() * COLORS.length)],
       opacity: r(0.25, 0.6),
     }));
-  }, [count]);
+  }, [effectiveCount]);
 
   if (reduce) return null;
 
