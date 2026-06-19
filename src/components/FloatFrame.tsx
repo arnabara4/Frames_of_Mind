@@ -48,7 +48,7 @@ export default function FloatFrame({
       animate={reduce ? undefined : { y: [0, -floatRange, 0] }}
       transition={{ duration: 6 + delay, repeat: Infinity, ease: "easeInOut", delay }}
       whileHover={reduce ? undefined : { rotate: 0, scale: 1.045, y: -8 }}
-      className={`group relative ${className}`}
+      className={`group relative transform-gpu ${className}`}
     >
       {tape && (
         <span className="absolute -top-2.5 left-1/2 z-10 h-5 w-16 -translate-x-1/2 rotate-[-4deg] rounded-[2px] bg-amber/35 shadow-sm ring-1 ring-white/50 backdrop-blur-sm" />

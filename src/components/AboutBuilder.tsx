@@ -430,10 +430,18 @@ function DraggableText({
     const sy = e.clientY;
     const ox = block.text_x;
     const oy = block.text_y;
+    let raf = 0;
+    let lastEv: PointerEvent | null = null;
+    const apply = () => {
+      raf = 0;
+      if (lastEv) onMove(ox + (lastEv.clientX - sx), oy + (lastEv.clientY - sy));
+    };
     const move = (ev: PointerEvent) => {
-      onMove(ox + (ev.clientX - sx), oy + (ev.clientY - sy));
+      lastEv = ev;
+      if (!raf) raf = requestAnimationFrame(apply);
     };
     const up = () => {
+      if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
     };
@@ -512,7 +520,12 @@ function ResizableImage({
     const startY = e.clientY;
     const startPct = pct;
     const startH = h;
-    const move = (ev: PointerEvent) => {
+    let raf = 0;
+    let lastEv: PointerEvent | null = null;
+    const apply = () => {
+      raf = 0;
+      const ev = lastEv;
+      if (!ev) return;
       const nextPct = sx
         ? Math.max(15, Math.min(100, Math.round(startPct + ((ev.clientX - startX) / pw) * 100 * sx)))
         : startPct;
@@ -521,7 +534,12 @@ function ResizableImage({
         : startH;
       onResize(nextPct, nextH);
     };
+    const move = (ev: PointerEvent) => {
+      lastEv = ev;
+      if (!raf) raf = requestAnimationFrame(apply); // throttle to one update / frame
+    };
     const up = () => {
+      if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
     };

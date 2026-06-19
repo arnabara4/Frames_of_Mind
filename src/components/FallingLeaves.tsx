@@ -66,7 +66,7 @@ export default function FallingLeaves({ count = 14 }: { count?: number }) {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-0 overflow-hidden"
+      className="pointer-events-none absolute inset-0 transform-gpu overflow-hidden [contain:strict]"
     >
       {drops.map((d, i) => (
         <motion.div

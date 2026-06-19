@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/components/AuthProvider";
 import LottieBackground from "@/components/LottieBackground";
+import DeferUntilIdle from "@/components/DeferUntilIdle";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
 
 // `display: swap` + a fallback prevent FOIT and minimise CLS as fonts load.
@@ -70,7 +71,9 @@ export default function RootLayout({
       className={`${fraunces.variable} ${lora.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <LottieBackground />
+        <DeferUntilIdle>
+          <LottieBackground />
+        </DeferUntilIdle>
         <AuthProvider>
           <div className="relative z-10 flex min-h-screen flex-col">
             <Navbar />

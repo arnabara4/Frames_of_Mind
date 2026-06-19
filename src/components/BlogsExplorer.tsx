@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import type { Blog } from "@/lib/types";
 import { BlogCard } from "@/components/BlogCard";
 import { useAuth } from "@/components/AuthProvider";
@@ -70,8 +70,12 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
     return arr;
   }, [blogs, year]);
 
+  // Deferred query keeps the search input responsive while the (potentially
+  // large) filtered list + staggered grid re-render in the background.
+  const dq = useDeferredValue(query);
+
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = dq.trim().toLowerCase();
     const list = blogs.filter((b) => {
       const d = new Date(b.created_at);
       if (year !== "all" && d.getFullYear() !== year) return false;
@@ -90,7 +94,7 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
     return list;
-  }, [blogs, query, year, month]);
+  }, [blogs, dq, year, month]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
 

@@ -2,20 +2,31 @@
 
 import LottiePlayer from "@/components/LottiePlayer";
 import { useReducedMotion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 /**
  * Global ambient autumn-leaves background. Fixed, covers the viewport, sits
- * behind all content at low opacity so it never hurts readability. Loops
- * continuously on every page. Disabled under reduced-motion.
+ * behind all content at low opacity. GPU-promoted, paused when the tab is
+ * hidden, and disabled under reduced-motion — so it never starves the main
+ * thread during reading or scrolling.
  */
 export default function LottieBackground() {
   const reduce = useReducedMotion();
-  if (reduce) return null;
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const onVis = () => setVisible(!document.hidden);
+    onVis();
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  if (reduce || !visible) return null;
 
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+      className="pointer-events-none fixed inset-0 z-0 transform-gpu overflow-hidden [contain:strict] [will-change:transform]"
     >
       <LottiePlayer
         src="/lottifiles/autumn-fall.lottie"
