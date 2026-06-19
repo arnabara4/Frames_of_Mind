@@ -25,9 +25,9 @@ export default async function HomePage() {
         {/* faint oversized seasonal word behind the hero */}
         <span
           aria-hidden
-          className="pointer-events-none absolute -right-10 top-24 select-none font-display text-[22vw] font-black leading-none text-coral/[0.05] md:top-16"
+          className="pointer-events-none absolute -right-10 top-24 select-none font-script text-[20vw] font-bold leading-none text-coral/[0.06] md:top-16"
         >
-          autumn
+          Pranavi
         </span>
 
         <div className="relative z-10 mx-auto grid max-w-[1440px] grid-cols-1 items-center gap-10 px-6 pt-14 md:grid-cols-[1.05fr_1fr] md:gap-6 md:px-10 md:pt-20">
