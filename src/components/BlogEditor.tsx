@@ -7,6 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 import SectionEditor, { type DraftSection } from "@/components/SectionEditor";
 import SectionView from "@/components/SectionView";
 import Thumb from "@/components/Thumb";
+import LeafBurst from "@/components/LeafBurst";
 import CoverFallback from "@/components/CoverFallback";
 import ImageUpload from "@/components/ImageUpload";
 import type { BlogSection, SectionKind } from "@/lib/types";
@@ -43,6 +44,7 @@ export default function BlogEditor({ initial }: { initial?: EditorInitial }) {
   );
   const [nextKind, setNextKind] = useState<SectionKind>("paragraph");
   const [saving, setSaving] = useState(false);
+  const [burst, setBurst] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const isEdit = !!initial;
@@ -126,8 +128,12 @@ export default function BlogEditor({ initial }: { initial?: EditorInitial }) {
     }
 
     await revalidatePaths(["/", "/blogs", `/blogs/${blogId}`]);
-    router.push(`/blogs/${blogId}`);
-    router.refresh();
+    // Celebrate, then glide to the published post.
+    setBurst((b) => b + 1);
+    setTimeout(() => {
+      router.push(`/blogs/${blogId}`);
+      router.refresh();
+    }, 850);
   }
 
   function fail(msg: string) {
@@ -145,6 +151,7 @@ export default function BlogEditor({ initial }: { initial?: EditorInitial }) {
 
   return (
     <div className="mx-auto max-w-[1500px] px-4 py-8 md:px-8">
+      <LeafBurst trigger={burst} />
       <p className="mb-3 text-sm uppercase tracking-[0.25em] text-coral/70">
         {isEdit ? "Editing post" : "New post"}
       </p>

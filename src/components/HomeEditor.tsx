@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import ImageUpload from "@/components/ImageUpload";
 import Thumb from "@/components/Thumb";
+import LeafBurst from "@/components/LeafBurst";
 import { mergeHome, type FrameItem, type HomeContent } from "@/lib/home";
 import { revalidatePaths } from "@/lib/revalidate";
 
@@ -105,6 +106,7 @@ export default function HomeEditor({
   const [c, setC] = useState<HomeContent>(mergeHome(initial));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [burst, setBurst] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -135,6 +137,7 @@ export default function HomeEditor({
     if (err) return setError(err.message);
     await revalidatePaths(["/"]);
     setSaved(true);
+    setBurst((b) => b + 1);
     router.refresh();
   }
 
@@ -144,6 +147,7 @@ export default function HomeEditor({
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
+      <LeafBurst trigger={burst} />
       <div className="mb-6 flex items-center justify-between">
         <Link
           href="/admin"

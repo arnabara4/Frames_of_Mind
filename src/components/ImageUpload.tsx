@@ -1,9 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 
 const BUCKET = "blog-images";
+const PUFF = ["🍂", "🍁", "🍃"];
 
 /** Uploads a new image OR lets the owner reuse one already in storage. */
 export default function ImageUpload({
@@ -19,6 +21,13 @@ export default function ImageUpload({
   const [error, setError] = useState<string | null>(null);
   const [showLib, setShowLib] = useState(false);
   const [lib, setLib] = useState<string[] | null>(null);
+  const [ok, setOk] = useState(false); // success flash
+
+  function celebrate() {
+    setOk(true);
+    if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(15);
+    setTimeout(() => setOk(false), 1600);
+  }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -40,6 +49,7 @@ export default function ImageUpload({
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
     onUploaded(data.publicUrl);
     setBusy(false);
+    celebrate();
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -59,14 +69,45 @@ export default function ImageUpload({
     <div className="relative flex flex-col gap-1">
       <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
       <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={busy}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-coral px-3.5 py-2 text-sm font-medium text-white transition hover:bg-coral-dark active:scale-95 disabled:opacity-60"
-        >
-          {busy ? "Uploading…" : `⬆ ${label}`}
-        </button>
+        <div className="relative">
+          <motion.button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={busy}
+            animate={ok ? { scale: [1, 1.18, 1] } : { scale: 1 }}
+            transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium text-white transition active:scale-95 disabled:opacity-60 ${
+              ok ? "bg-emerald-500" : "bg-coral hover:bg-coral-dark"
+            }`}
+          >
+            {busy ? "Uploading…" : ok ? "✓ Added!" : `⬆ ${label}`}
+          </motion.button>
+
+          {/* mini leaf puff on success */}
+          <AnimatePresence>
+            {ok && (
+              <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center">
+                {[-1, 0, 1, 2].map((k, i) => (
+                  <motion.span
+                    key={i}
+                    className="absolute text-base"
+                    initial={{ x: 0, y: 0, opacity: 1, scale: 0 }}
+                    animate={{
+                      x: k * 22,
+                      y: -28 - Math.abs(k) * 6,
+                      opacity: 0,
+                      scale: 1,
+                      rotate: k * 90,
+                    }}
+                    transition={{ duration: 0.9, ease: "easeOut" }}
+                  >
+                    {PUFF[i % PUFF.length]}
+                  </motion.span>
+                ))}
+              </div>
+            )}
+          </AnimatePresence>
+        </div>
         <button
           type="button"
           onClick={openLibrary}
@@ -97,6 +138,7 @@ export default function ImageUpload({
                   type="button"
                   onClick={() => {
                     onUploaded(url);
+                    celebrate();
                     setShowLib(false);
                   }}
                   className="group relative aspect-square overflow-hidden rounded-lg ring-1 ring-maple/15 transition hover:ring-2 hover:ring-coral"

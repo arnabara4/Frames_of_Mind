@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import AboutBlockEditor, { type DraftBlock } from "@/components/AboutBlockEditor";
 import AboutBlockView from "@/components/AboutBlockView";
+import LeafBurst from "@/components/LeafBurst";
 import Thumb from "@/components/Thumb";
 import { renderRich } from "@/lib/format";
 import { ALIGN_CLASS, FONT_CLASS, SIZE_CLASS } from "@/lib/types";
@@ -65,6 +66,7 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [burst, setBurst] = useState(0);
   const editorRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Auto-dismiss the success toast.
@@ -154,6 +156,7 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
     }
     await revalidatePaths(["/about"]);
     setSaved(true);
+    setBurst((b) => b + 1);
     router.refresh();
   }
 
@@ -167,6 +170,7 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
 
   return (
     <div className="mx-auto max-w-[1500px] px-4 py-8 md:px-8">
+      <LeafBurst trigger={burst} />
       <div className="mb-3 flex items-center justify-between">
         <button
           type="button"
@@ -185,19 +189,25 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
         <div className="rounded-2xl bg-graybox/30 p-4">
           <div className="flex flex-col gap-3">
             {blocks.map((b, i) => (
-              <AboutBlockEditor
+              <motion.div
                 key={i}
-                block={b}
-                index={i}
-                count={blocks.length}
-                selected={selected === i}
-                innerRef={(el) => {
-                  editorRefs.current[i] = el;
-                }}
-                onChange={(next) => update(i, next)}
-                onDelete={() => remove(i)}
-                onMove={(dir) => move(i, dir)}
-              />
+                initial={{ opacity: 0, scale: 0.95, y: -8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 320, damping: 22 }}
+              >
+                <AboutBlockEditor
+                  block={b}
+                  index={i}
+                  count={blocks.length}
+                  selected={selected === i}
+                  innerRef={(el) => {
+                    editorRefs.current[i] = el;
+                  }}
+                  onChange={(next) => update(i, next)}
+                  onDelete={() => remove(i)}
+                  onMove={(dir) => move(i, dir)}
+                />
+              </motion.div>
             ))}
             {blocks.length === 0 && (
               <p className="py-8 text-center text-ink/40">
