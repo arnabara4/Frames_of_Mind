@@ -133,28 +133,36 @@ export default function Navbar() {
             );
           })}
 
-          {/* Owner-only */}
+          {/* Owner-only (static highlight — avoids fighting the shared nav pill) */}
           {owner && (
-            <Link
-              href="/admin"
-              className={`relative ml-1 flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 transition-colors md:px-4 ${
-                pathname.startsWith("/admin")
-                  ? "text-coral"
-                  : "text-bark/70 hover:text-coral"
-              }`}
-            >
-              {pathname.startsWith("/admin") && (
-                <motion.span
-                  layoutId="nav-pill"
-                  className="absolute inset-0 -z-10 rounded-xl bg-peach/45 ring-1 ring-coral/15"
-                  transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                />
-              )}
-              <Grid />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.12em]">
-                Studio
-              </span>
-            </Link>
+            <>
+              <Link
+                href="/admin/messages"
+                className={`relative ml-1 flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 transition-colors md:px-4 ${
+                  pathname.startsWith("/admin/messages")
+                    ? "bg-peach/45 text-coral ring-1 ring-coral/15"
+                    : "text-bark/70 hover:text-coral"
+                }`}
+              >
+                <Mail />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em]">
+                  Inbox
+                </span>
+              </Link>
+              <Link
+                href="/admin"
+                className={`flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 transition-colors md:px-4 ${
+                  pathname === "/admin" || pathname.startsWith("/admin/home")
+                    ? "bg-peach/45 text-coral ring-1 ring-coral/15"
+                    : "text-bark/70 hover:text-coral"
+                }`}
+              >
+                <Grid />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.12em]">
+                  Studio
+                </span>
+              </Link>
+            </>
           )}
 
           {user && (
