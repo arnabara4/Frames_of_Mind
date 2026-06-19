@@ -64,7 +64,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {user ? (
+          {user && (
             <button
               onClick={async () => {
                 await signOut();
@@ -75,17 +75,6 @@ export default function Navbar() {
             >
               Logout
             </button>
-          ) : (
-            <Link
-              href="/login"
-              className={`rounded-full border-2 border-coral px-4 py-1.5 text-sm font-medium transition-all active:scale-95 md:px-5 ${
-                pathname.startsWith("/login")
-                  ? "bg-coral text-white"
-                  : "text-coral hover:bg-coral hover:text-white"
-              }`}
-            >
-              LOG-IN
-            </Link>
           )}
         </div>
       </nav>
