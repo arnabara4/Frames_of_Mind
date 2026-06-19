@@ -24,7 +24,8 @@ export type AboutKind =
   | "list"
   | "quote"
   | "image"
-  | "divider";
+  | "divider"
+  | "split";
 export type FontChoice = "display" | "serif" | "sans";
 export type TextSize = "sm" | "md" | "lg" | "xl";
 export type ImgWidth = "sm" | "md" | "lg" | "full";
@@ -38,8 +39,18 @@ export interface AboutBlock {
   font: FontChoice;
   size: TextSize;
   img_width: ImgWidth;
+  img_pct: number | null;
+  img_side: "left" | "right";
   position: number;
 }
+
+/** Preset image widths map to a percentage for the drag-resize model. */
+export const IMG_PCT_PRESET: Record<ImgWidth, number> = {
+  sm: 30,
+  md: 50,
+  lg: 75,
+  full: 100,
+};
 
 export const FONT_CLASS: Record<FontChoice, string> = {
   display: "font-display",

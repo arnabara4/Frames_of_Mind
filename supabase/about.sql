@@ -4,16 +4,22 @@
 create table if not exists public.about_blocks (
   id         uuid primary key default gen_random_uuid(),
   kind       text not null default 'paragraph'
-             check (kind in ('heading','paragraph','list','quote','image','divider')),
+             check (kind in ('heading','paragraph','list','quote','image','divider','split')),
   content    text,
   image_url  text,
   align      text not null default 'left'  check (align in ('left','center','right')),
   font       text not null default 'serif' check (font in ('display','serif','sans')),
   size       text not null default 'md'    check (size in ('sm','md','lg','xl')),
   img_width  text not null default 'md'    check (img_width in ('sm','md','lg','full')),
+  img_pct    int,
+  img_side   text not null default 'left'  check (img_side in ('left','right')),
   position   int  not null default 0,
   created_at timestamptz not null default now()
 );
+
+-- Backfill for databases created before these columns existed.
+alter table public.about_blocks add column if not exists img_pct int;
+alter table public.about_blocks add column if not exists img_side text not null default 'left';
 
 create index if not exists about_blocks_position_idx on public.about_blocks (position);
 

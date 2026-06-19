@@ -8,7 +8,7 @@ import type {
   ImgWidth,
   TextSize,
 } from "@/lib/types";
-import { FONT_LABEL } from "@/lib/types";
+import { FONT_LABEL, IMG_PCT_PRESET } from "@/lib/types";
 import ImageUpload from "@/components/ImageUpload";
 import Thumb from "@/components/Thumb";
 
@@ -20,6 +20,8 @@ export interface DraftBlock {
   font: FontChoice;
   size: TextSize;
   img_width: ImgWidth;
+  img_pct: number | null;
+  img_side: "left" | "right";
 }
 
 const PLACEHOLDER: Record<AboutKind, string> = {
@@ -27,6 +29,7 @@ const PLACEHOLDER: Record<AboutKind, string> = {
   paragraph: "Write a paragraph…  (**bold**, *italic*)",
   list: "One point per line…\nEach line becomes a bullet",
   quote: "A quote…",
+  split: "Text that sits beside the image…",
   image: "",
   divider: "",
 };
@@ -64,6 +67,8 @@ export default function AboutBlockEditor({
   block,
   index,
   count,
+  selected,
+  innerRef,
   onChange,
   onDelete,
   onMove,
@@ -71,12 +76,17 @@ export default function AboutBlockEditor({
   block: DraftBlock;
   index: number;
   count: number;
+  selected?: boolean;
+  innerRef?: (el: HTMLDivElement | null) => void;
   onChange: (b: DraftBlock) => void;
   onDelete: () => void;
   onMove: (dir: -1 | 1) => void;
 }) {
   const taRef = useRef<HTMLTextAreaElement>(null);
-  const isText = ["heading", "paragraph", "list", "quote"].includes(block.kind);
+  const isText = ["heading", "paragraph", "list", "quote", "split"].includes(
+    block.kind,
+  );
+  const hasImage = block.kind === "image" || block.kind === "split";
 
   function wrap(marker: string) {
     const ta = taRef.current;
@@ -94,39 +104,25 @@ export default function AboutBlockEditor({
   }
 
   return (
-    <div className="rounded-2xl bg-white/90 p-4 shadow-sm ring-1 ring-maple/10">
-      {/* header */}
+    <div
+      ref={innerRef}
+      className={`scroll-mt-24 rounded-2xl bg-white/90 p-4 shadow-sm ring-1 transition ${
+        selected ? "ring-2 ring-coral" : "ring-maple/10"
+      }`}
+    >
       <div className="mb-2 flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-widest text-coral/80">
-          {block.kind}
+          {block.kind === "split" ? "image + text" : block.kind}
         </span>
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => onMove(-1)}
-            disabled={index === 0}
+          <button type="button" onClick={() => onMove(-1)} disabled={index === 0}
             aria-label="Move up"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-ink/50 transition hover:bg-peach/50 disabled:opacity-30"
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-            onClick={() => onMove(1)}
-            disabled={index === count - 1}
+            className="flex h-7 w-7 items-center justify-center rounded-full text-ink/50 transition hover:bg-peach/50 disabled:opacity-30">↑</button>
+          <button type="button" onClick={() => onMove(1)} disabled={index === count - 1}
             aria-label="Move down"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-ink/50 transition hover:bg-peach/50 disabled:opacity-30"
-          >
-            ↓
-          </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            aria-label="Delete"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold text-coral transition hover:bg-coral hover:text-white"
-          >
-            ×
-          </button>
+            className="flex h-7 w-7 items-center justify-center rounded-full text-ink/50 transition hover:bg-peach/50 disabled:opacity-30">↓</button>
+          <button type="button" onClick={onDelete} aria-label="Delete"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold text-coral transition hover:bg-coral hover:text-white">×</button>
         </div>
       </div>
 
@@ -136,29 +132,15 @@ export default function AboutBlockEditor({
           {isText && (
             <>
               <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => wrap("**")}
-                  className="h-7 w-7 rounded-md bg-peach/40 text-sm font-bold transition hover:bg-peach/70"
-                  title="Bold"
-                >
-                  B
-                </button>
-                <button
-                  type="button"
-                  onClick={() => wrap("*")}
-                  className="h-7 w-7 rounded-md bg-peach/40 text-sm italic transition hover:bg-peach/70"
-                  title="Italic"
-                >
-                  I
-                </button>
+                <button type="button" onClick={() => wrap("**")} title="Bold"
+                  className="h-7 w-7 rounded-md bg-peach/40 text-sm font-bold transition hover:bg-peach/70">B</button>
+                <button type="button" onClick={() => wrap("*")} title="Italic"
+                  className="h-7 w-7 rounded-md bg-peach/40 text-sm italic transition hover:bg-peach/70">I</button>
               </div>
               <Seg<FontChoice>
                 value={block.font}
                 onChange={(v) => onChange({ ...block, font: v })}
-                options={(["display", "serif", "sans"] as FontChoice[]).map(
-                  (f) => ({ v: f, label: FONT_LABEL[f] }),
-                )}
+                options={(["display", "serif", "sans"] as FontChoice[]).map((f) => ({ v: f, label: FONT_LABEL[f] }))}
               />
               <Seg<TextSize>
                 value={block.size}
@@ -173,10 +155,12 @@ export default function AboutBlockEditor({
             </>
           )}
 
-          {block.kind === "image" && (
+          {hasImage && (
             <Seg<ImgWidth>
               value={block.img_width}
-              onChange={(v) => onChange({ ...block, img_width: v })}
+              onChange={(v) =>
+                onChange({ ...block, img_width: v, img_pct: IMG_PCT_PRESET[v] })
+              }
               options={[
                 { v: "sm", label: "S" },
                 { v: "md", label: "M" },
@@ -186,7 +170,17 @@ export default function AboutBlockEditor({
             />
           )}
 
-          {/* alignment for text + image */}
+          {block.kind === "split" && (
+            <Seg<"left" | "right">
+              value={block.img_side}
+              onChange={(v) => onChange({ ...block, img_side: v })}
+              options={[
+                { v: "left", label: "🖼 ◀" },
+                { v: "right", label: "▶ 🖼" },
+              ]}
+            />
+          )}
+
           <Seg<Align>
             value={block.align}
             onChange={(v) => onChange({ ...block, align: v })}
@@ -199,9 +193,9 @@ export default function AboutBlockEditor({
         </div>
       )}
 
-      {/* body */}
-      {block.kind === "image" ? (
-        <div className="flex flex-col gap-2">
+      {/* image input (image + split) */}
+      {hasImage && (
+        <div className="mb-2 flex flex-col gap-2">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
             <input
               type="url"
@@ -210,32 +204,30 @@ export default function AboutBlockEditor({
               onChange={(e) => onChange({ ...block, image_url: e.target.value })}
               className="w-full rounded-lg border border-black/15 px-3 py-2 outline-none transition focus:border-coral"
             />
-            <ImageUpload
-              label="Upload"
-              onUploaded={(url) => onChange({ ...block, image_url: url })}
-            />
+            <ImageUpload label="Upload" onUploaded={(url) => onChange({ ...block, image_url: url })} />
           </div>
           {block.image_url.trim() && (
-            <Thumb
-              src={block.image_url}
-              alt="preview"
-              framed
-              className="h-32 w-full max-w-xs"
-            />
+            <Thumb src={block.image_url} alt="preview" framed className="h-24 w-full max-w-[10rem]" />
           )}
+          <p className="text-[11px] text-ink/40">Tip: drag the image edge in the preview to resize.</p>
         </div>
-      ) : block.kind === "divider" ? (
-        <p className="text-sm text-ink/40">A decorative leaf divider 🍁</p>
-      ) : (
+      )}
+
+      {/* text body (text kinds + split) */}
+      {isText && (
         <textarea
           ref={taRef}
           value={block.content}
           placeholder={PLACEHOLDER[block.kind]}
           onChange={(e) => onChange({ ...block, content: e.target.value })}
-          rows={block.kind === "paragraph" || block.kind === "list" ? 4 : 2}
+          rows={block.kind === "heading" || block.kind === "quote" ? 2 : 4}
           style={{ textAlign: block.align }}
           className="w-full resize-y rounded-lg border border-black/15 px-3 py-2 leading-relaxed outline-none transition focus:border-coral"
         />
+      )}
+
+      {block.kind === "divider" && (
+        <p className="text-sm text-ink/40">A decorative leaf divider 🍁</p>
       )}
     </div>
   );
