@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isOwner } from "@/lib/auth";
+import { rateLimit, sweep } from "@/lib/ratelimit";
+import { getClientIp } from "@/lib/ip";
 
 /**
  * Owner-only on-demand cache invalidation. The client editors call this after a
@@ -9,6 +11,10 @@ import { isOwner } from "@/lib/auth";
  * of waiting for the revalidate window.
  */
 export async function POST(req: Request) {
+  sweep();
+  const rl = rateLimit(`revalidate:${getClientIp(req)}`, 30, 60_000);
+  if (!rl.ok) return NextResponse.json({ ok: false }, { status: 429 });
+
   const supabase = await createClient();
   const {
     data: { user },

@@ -2,18 +2,17 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { createClient } from "@/lib/supabase/client";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
 export default function ContactPage() {
-  const supabase = createClient();
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
     email: "",
     body: "",
   });
+  const [website, setWebsite] = useState(""); // honeypot
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -26,14 +25,24 @@ export default function ContactPage() {
     e.preventDefault();
     setStatus("sending");
     setError(null);
-    const { error } = await supabase.from("messages").insert(form);
-    if (error) {
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...form, website }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        setStatus("error");
+        setError(data.error ?? "Could not send — try again.");
+        return;
+      }
+      setStatus("sent");
+      setForm({ first_name: "", last_name: "", email: "", body: "" });
+    } catch {
       setStatus("error");
-      setError(error.message);
-      return;
+      setError("Network error — please try again.");
     }
-    setStatus("sent");
-    setForm({ first_name: "", last_name: "", email: "", body: "" });
   }
 
   return (
@@ -137,6 +146,17 @@ export default function ContactPage() {
                 onSubmit={handleSubmit}
                 className="flex flex-col gap-5"
               >
+                {/* Honeypot — hidden from humans, catches bots */}
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  aria-hidden
+                  className="absolute left-[-9999px] h-0 w-0 opacity-0"
+                />
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   <Field
                     label="First Name"
