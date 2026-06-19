@@ -271,18 +271,32 @@ function MobileDrawer({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-40 bg-bark/30 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-[60] bg-bark/55 backdrop-blur-sm md:hidden"
           />
           <motion.aside
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 360, damping: 38 }}
-            className="fixed right-0 top-0 z-50 flex h-full w-[78%] max-w-xs flex-col gap-2 border-l border-maple/15 bg-gradient-to-b from-cream to-peach/40 p-5 pt-6 shadow-2xl md:hidden"
+            className="fixed right-0 top-0 z-[70] flex h-full w-[80%] max-w-xs flex-col gap-2 border-l border-maple/20 bg-gradient-to-b from-cream to-peach p-5 pt-5 shadow-2xl md:hidden"
           >
-            <p className="mb-3 px-2 font-script text-lg italic text-maple/70">
-              月が綺麗 — wander in
-            </p>
+            {/* header + close */}
+            <div className="mb-2 flex items-center justify-between">
+              <p className="px-1 font-script text-lg italic text-maple/80">
+                月が綺麗
+              </p>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close menu"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-coral transition active:scale-90"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M6 6l12 12" />
+                  <path d="M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
             {items.map(({ href, label, Icon }) => {
               const active = isActive(href);
               return (
