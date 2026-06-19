@@ -32,6 +32,15 @@
 
 html {
   scroll-behavior: smooth;
+  /* Hide the scrollbar while keeping scroll functional. */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge/IE */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none; /* Chrome / Safari */
 }
 
 body {
