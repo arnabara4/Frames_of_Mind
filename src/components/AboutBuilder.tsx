@@ -361,6 +361,7 @@ function DraggableText({
   onMove: (x: number, y: number) => void;
 }) {
   function start(e: React.PointerEvent) {
+    e.preventDefault();
     e.stopPropagation();
     onSelect();
     const sx = e.clientX;
@@ -380,13 +381,24 @@ function DraggableText({
 
   return (
     <div
-      onPointerDown={start}
-      title="Drag to move · arrow keys to nudge"
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect();
+      }}
       style={{ transform: `translate(${block.text_x}px, ${block.text_y}px)` }}
-      className={`cursor-move touch-none whitespace-pre-wrap rounded leading-relaxed text-bark/85 transition ${FONT_CLASS[block.font]} ${SIZE_CLASS[block.size]} ${ALIGN_CLASS[block.align]} ${
-        selected ? "ring-2 ring-coral/50 ring-offset-2 ring-offset-transparent" : "hover:ring-1 hover:ring-coral/30"
-      }`}
+      className={`group/txt relative whitespace-pre-wrap leading-relaxed text-bark/85 ${FONT_CLASS[block.font]} ${SIZE_CLASS[block.size]} ${ALIGN_CLASS[block.align]}`}
     >
+      {/* Small drag grip — the only move affordance, so nothing boxes over the image */}
+      <button
+        type="button"
+        onPointerDown={start}
+        title="Drag to move · arrow keys to nudge"
+        className={`absolute -top-3 left-0 z-10 inline-flex cursor-move touch-none items-center gap-1 rounded-full bg-coral px-2 py-0.5 text-[10px] font-semibold text-white shadow transition ${
+          selected ? "opacity-100" : "opacity-0 group-hover/txt:opacity-100"
+        }`}
+      >
+        ⠿ move
+      </button>
       {renderRich(block.content) || (
         <span className="text-ink/30">Text wraps around the image…</span>
       )}
