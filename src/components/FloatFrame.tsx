@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Thumb from "@/components/Thumb";
 
@@ -33,6 +34,9 @@ export default function FloatFrame({
   className?: string;
 }) {
   const reduce = useReducedMotion();
+  const [err, setErr] = useState(false);
+  useEffect(() => setErr(false), [src]);
+  const showImg = !!src && !err;
 
   const frame = ornate
     ? "rounded-[22px] bg-gradient-to-br from-white via-cream to-peach/40 p-3.5 pb-9 shadow-[0_34px_70px_-30px_rgba(156,52,21,0.85)] ring-1 ring-maple/25"
@@ -62,13 +66,28 @@ export default function FloatFrame({
         )}
 
         <div
-          className={`relative overflow-hidden rounded-[12px] ${aspect} ${
+          className={`relative overflow-hidden rounded-[12px] ${
+            showImg ? "" : aspect
+          } ${
             ornate
               ? "ring-1 ring-maple/20 [box-shadow:inset_0_0_0_3px_#fff8f1,inset_0_0_0_4px_rgba(182,67,42,0.25)]"
               : ""
           }`}
         >
-          <Thumb src={src} seed={seed} rounded="rounded-[12px]" className="h-full w-full" />
+          {showImg ? (
+            // Natural aspect — the frame fits the photo so it's shown in full
+            // (no cropping) and still fills the frame edge to edge.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={src as string}
+              alt={caption ?? ""}
+              loading="lazy"
+              onError={() => setErr(true)}
+              className="block h-auto w-full"
+            />
+          ) : (
+            <Thumb seed={seed} rounded="rounded-[12px]" className="h-full w-full" />
+          )}
         </div>
 
         {caption && (
