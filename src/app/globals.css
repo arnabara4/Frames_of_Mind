@@ -30,6 +30,14 @@
   --foreground: #2b1d16;
 }
 
+/* Custom active/scale feedback replaces the default mobile tap flash. */
+button,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; /* removes the 300ms double-tap delay */
+}
+
 html {
   scroll-behavior: smooth;
   /* Hide the scrollbar while keeping scroll functional. */
