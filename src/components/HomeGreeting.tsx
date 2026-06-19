@@ -66,15 +66,15 @@ export default function HomeGreeting() {
         <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
           <Link
             href="/blogs/new"
-            className="inline-flex items-center gap-2 rounded-full bg-coral px-8 py-3.5 font-display text-[17px] font-semibold tracking-wide text-white shadow-[var(--shadow-warm)] transition-colors hover:bg-coral-dark"
+            className="inline-flex items-center gap-2.5 rounded-full bg-coral px-8 py-3.5 font-body text-[13px] font-semibold uppercase tracking-[0.14em] text-white shadow-[var(--shadow-warm)] transition-colors hover:bg-coral-dark"
           >
-            <span className="text-lg">✍</span> Write a new story
+            <span className="text-base">✍</span> Write a new story
           </Link>
         </motion.div>
         <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
           <Link
             href="/admin"
-            className="inline-flex items-center gap-2 rounded-full border border-coral/40 bg-white/60 px-7 py-3.5 font-display text-[17px] font-semibold tracking-wide text-coral transition-colors hover:bg-white"
+            className="inline-flex items-center gap-2.5 rounded-full border border-coral/40 bg-white/60 px-7 py-3.5 font-body text-[13px] font-semibold uppercase tracking-[0.14em] text-coral transition-colors hover:bg-white"
           >
             Open Studio →
           </Link>
