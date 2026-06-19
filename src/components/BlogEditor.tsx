@@ -8,6 +8,7 @@ import SectionEditor, { type DraftSection } from "@/components/SectionEditor";
 import SectionView from "@/components/SectionView";
 import Thumb from "@/components/Thumb";
 import CoverFallback from "@/components/CoverFallback";
+import ImageUpload from "@/components/ImageUpload";
 import type { BlogSection, SectionKind } from "@/lib/types";
 
 const TABS: { kind: SectionKind; label: string; icon: string }[] = [
@@ -161,14 +162,29 @@ export default function BlogEditor({ initial }: { initial?: EditorInitial }) {
             <label className="text-xs font-semibold uppercase tracking-widest text-coral/80">
               Header image
             </label>
-            <input
-              type="url"
-              value={cover}
-              onChange={(e) => setCover(e.target.value)}
-              placeholder="Paste a cover image URL (optional)"
-              className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 outline-none transition focus:border-coral"
-            />
-            <p className="mt-1.5 text-xs text-ink/40">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-start">
+              <input
+                type="url"
+                value={cover}
+                onChange={(e) => setCover(e.target.value)}
+                placeholder="Upload, or paste an image URL"
+                className="w-full rounded-lg border border-black/15 px-3 py-2 outline-none transition focus:border-coral"
+              />
+              <ImageUpload label="Upload" onUploaded={setCover} />
+            </div>
+            {cover.trim() && (
+              <div className="mt-3 flex items-center gap-3">
+                <Thumb src={cover} alt="cover" className="h-16 w-24" />
+                <button
+                  type="button"
+                  onClick={() => setCover("")}
+                  className="text-xs text-ink/50 hover:text-coral"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+            <p className="mt-2 text-xs text-ink/40">
               Leave empty to use the falling-leaves header.
             </p>
           </div>

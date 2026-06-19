@@ -2,6 +2,8 @@
 
 import { useRef } from "react";
 import type { Align, SectionKind } from "@/lib/types";
+import ImageUpload from "@/components/ImageUpload";
+import Thumb from "@/components/Thumb";
 
 export interface DraftSection {
   kind: SectionKind;
@@ -111,13 +113,31 @@ export default function SectionEditor({
       )}
 
       {section.kind === "image" ? (
-        <input
-          type="url"
-          value={section.image_url}
-          placeholder={PLACEHOLDERS.image}
-          onChange={(e) => onChange({ ...section, image_url: e.target.value })}
-          className="w-full rounded-lg border border-black/15 px-3 py-2 outline-none transition focus:border-coral"
-        />
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+            <input
+              type="url"
+              value={section.image_url}
+              placeholder={PLACEHOLDERS.image}
+              onChange={(e) =>
+                onChange({ ...section, image_url: e.target.value })
+              }
+              className="w-full rounded-lg border border-black/15 px-3 py-2 outline-none transition focus:border-coral"
+            />
+            <ImageUpload
+              label="Upload"
+              onUploaded={(url) => onChange({ ...section, image_url: url })}
+            />
+          </div>
+          {section.image_url.trim() && (
+            <Thumb
+              src={section.image_url}
+              alt="section image"
+              framed
+              className="h-32 w-full max-w-xs"
+            />
+          )}
+        </div>
       ) : (
         <textarea
           ref={taRef}

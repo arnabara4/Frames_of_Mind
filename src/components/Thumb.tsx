@@ -1,8 +1,11 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 /**
  * Image with a graceful autumn placeholder and an optional "framed" treatment
- * (elegant border, rounded corners, warm drop shadow) so that real uploads land
- * looking deliberate. Figma used anime artwork; until real assets exist we render
- * a tasteful warm gradient block.
+ * (elegant border, rounded corners, warm drop shadow). If the src is missing or
+ * fails to load, it falls back to a warm gradient block so the layout never breaks.
  */
 export default function Thumb({
   src,
@@ -19,6 +22,13 @@ export default function Thumb({
   framed?: boolean;
   rounded?: string;
 }) {
+  const [failed, setFailed] = useState(false);
+
+  // Reset the error state if the src changes (e.g. live editor preview).
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
   const frame = framed
     ? "p-1.5 bg-gradient-to-br from-white to-peach/40 shadow-[var(--shadow-warm)] ring-1 ring-maple/15"
     : "";
@@ -31,14 +41,18 @@ export default function Thumb({
   ];
   const g = gradients[seed % gradients.length];
 
+  const showImg = !!src && !failed;
+
   return (
     <div className={`overflow-hidden ${rounded} ${frame} ${className}`}>
       <div className={`relative h-full w-full overflow-hidden ${rounded}`}>
-        {src ? (
+        {showImg ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={src}
+            src={src as string}
             alt={alt ?? ""}
+            loading="lazy"
+            onError={() => setFailed(true)}
             className="h-full w-full object-cover transition duration-700 hover:scale-[1.04]"
           />
         ) : (
