@@ -3,33 +3,46 @@ import type { Blog } from "@/lib/types";
 import { formatDate } from "@/lib/types";
 import Thumb from "@/components/Thumb";
 
+function Meta({ blog }: { blog: Blog }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="rounded-full bg-coral/10 px-3 py-1 text-xs font-semibold text-coral ring-1 ring-coral/15">
+        {formatDate(blog.created_at)}
+      </span>
+      <span className="inline-flex items-center gap-1 text-xs text-bark/55">
+        🍂 {blog.read_time ?? "2 min read"}
+      </span>
+    </div>
+  );
+}
+
 /** Vertical card used in the /blogs grid. */
 export function BlogCard({ blog, seed = 0 }: { blog: Blog; seed?: number }) {
   return (
     <Link
       href={`/blogs/${blog.id}`}
-      className="group block h-full rounded-3xl bg-white/80 p-5 shadow-sm ring-1 ring-maple/10 backdrop-blur transition-shadow duration-300 hover:shadow-[var(--shadow-warm)]"
+      className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-maple/15 bg-gradient-to-br from-white via-cream/50 to-peach/30 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-coral/30 hover:shadow-[var(--shadow-warm)]"
     >
-      <Thumb
-        src={blog.cover_image}
-        alt={blog.title}
-        seed={seed}
-        framed
-        className="h-56 w-full"
-      />
-      <p className="mt-4 text-sm text-bark/50">
-        {formatDate(blog.created_at)} · {blog.read_time ?? "2 min read"}
-      </p>
-      <h3 className="mt-1 font-display text-2xl font-bold text-ink transition-colors group-hover:text-coral">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-4 -top-3 text-5xl opacity-0 transition-all duration-500 group-hover:rotate-12 group-hover:opacity-30"
+      >
+        🍁
+      </span>
+      <Thumb src={blog.cover_image} alt={blog.title} seed={seed} framed className="h-56 w-full" />
+      <div className="mt-4">
+        <Meta blog={blog} />
+      </div>
+      <h3 className="mt-2 font-display text-2xl font-bold text-ink transition-colors group-hover:text-coral">
         {blog.title}
       </h3>
       {blog.excerpt && (
-        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-bark/70">
+        <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-bark/70">
           {blog.excerpt}
         </p>
       )}
-      <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-coral opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100">
-        Read more →
+      <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-coral opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100">
+        Read more 🍃
       </span>
     </Link>
   );
@@ -40,20 +53,17 @@ export function BlogRow({ blog, seed = 0 }: { blog: Blog; seed?: number }) {
   return (
     <Link
       href={`/blogs/${blog.id}`}
-      className="group grid grid-cols-[140px_1fr] gap-5 rounded-3xl bg-white/80 p-5 shadow-sm ring-1 ring-maple/10 backdrop-blur transition-shadow duration-300 hover:shadow-[var(--shadow-warm)] md:grid-cols-[300px_1fr] md:gap-8 md:p-6"
+      className="group relative grid grid-cols-[130px_1fr] items-center gap-5 overflow-hidden rounded-3xl border border-maple/15 bg-gradient-to-br from-white via-cream/45 to-peach/25 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-coral/30 hover:shadow-[var(--shadow-warm)] md:grid-cols-[280px_1fr] md:gap-8 md:p-5"
     >
-      <Thumb
-        src={blog.cover_image}
-        alt={blog.title}
-        seed={seed}
-        framed
-        className="h-28 w-full md:h-44"
+      {/* coral accent rail */}
+      <span
+        aria-hidden
+        className="absolute left-0 top-0 h-full w-1 origin-top scale-y-0 bg-gradient-to-b from-coral to-maple transition-transform duration-300 group-hover:scale-y-100"
       />
+      <Thumb src={blog.cover_image} alt={blog.title} seed={seed} framed className="h-28 w-full md:h-44" />
       <div className="min-w-0">
-        <p className="text-xs text-bark/50 md:text-sm">
-          {formatDate(blog.created_at)}
-        </p>
-        <h3 className="mt-1 font-display text-xl font-bold text-ink transition-colors group-hover:text-coral md:text-3xl">
+        <Meta blog={blog} />
+        <h3 className="mt-2 font-display text-xl font-bold text-ink transition-colors group-hover:text-coral md:text-3xl">
           {blog.title}
         </h3>
         {blog.excerpt && (
@@ -61,7 +71,9 @@ export function BlogRow({ blog, seed = 0 }: { blog: Blog; seed?: number }) {
             {blog.excerpt}
           </p>
         )}
-        <div className="mt-4 h-px w-full bg-maple/10" />
+        <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-coral/0 transition-all duration-300 group-hover:translate-x-1 group-hover:text-coral">
+          Read the entry →
+        </span>
       </div>
     </Link>
   );
