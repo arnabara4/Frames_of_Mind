@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Blog } from "@/lib/types";
-import Thumb from "@/components/Thumb";
 import { BlogRow } from "@/components/BlogCard";
 import HomeGreeting from "@/components/HomeGreeting";
+import FloatFrame from "@/components/FloatFrame";
 import { Reveal, StaggerGrid, StaggerItem } from "@/components/motion";
 
 export const dynamic = "force-dynamic";
@@ -19,66 +20,211 @@ export default async function HomePage() {
 
   return (
     <div id="top">
-      {/* Hero */}
+      {/* ───────────────── Hero ───────────────── */}
       <section className="relative overflow-hidden">
-        <div className="relative z-10 mx-auto grid max-w-[1440px] grid-cols-1 gap-10 px-6 pt-12 md:grid-cols-2 md:px-10 md:pt-20">
-          <Reveal>
-            <Thumb
-              alt="Frames of Mind hero"
-              seed={0}
-              framed
-              className="aspect-square w-full"
-            />
-          </Reveal>
-          <div className="flex flex-col justify-center gap-8">
-            <Reveal delay={0.1}>
-              <h1 className="font-display text-4xl font-extrabold text-coral md:text-6xl">
-                MY THOUGHTS
+        {/* faint oversized seasonal word behind the hero */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-10 top-24 select-none font-display text-[22vw] font-black leading-none text-coral/[0.05] md:top-16"
+        >
+          autumn
+        </span>
+
+        <div className="relative z-10 mx-auto grid max-w-[1440px] grid-cols-1 items-center gap-10 px-6 pt-14 md:grid-cols-[1.05fr_1fr] md:gap-6 md:px-10 md:pt-20">
+          {/* Left — words */}
+          <div className="flex flex-col gap-6">
+            <Reveal>
+              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-maple/20 bg-white/60 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.25em] text-maple/80 backdrop-blur">
+                🍂 Frames of Mind · Autumn Journal
+              </span>
+            </Reveal>
+
+            <Reveal delay={0.08}>
+              <h1 className="font-display text-5xl font-extrabold leading-[1.02] text-bark md:text-7xl">
+                Collected thoughts,
+                <br />
+                like{" "}
+                <span className="italic text-coral">falling leaves.</span>
               </h1>
             </Reveal>
-            <Reveal delay={0.2}>
-              <Thumb alt="Featured" seed={1} framed className="h-64 w-full md:h-80" />
-            </Reveal>
-            <Reveal delay={0.3}>
-              <p className="font-serif text-xl italic leading-relaxed text-bark md:text-2xl">
-                “Never stop fighting until you arrive at your destined place —
-                that is, the unique you.”
+
+            <Reveal delay={0.16}>
+              <p className="max-w-md font-serif text-lg italic leading-relaxed text-bark/75 md:text-xl">
+                A sanctuary of words — where the written self steps forward when
+                the spoken one falters. Pull up a chair; the kettle&apos;s warm.
               </p>
             </Reveal>
+
+            <Reveal delay={0.24}>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/blogs"
+                  className="inline-flex items-center gap-2 rounded-full bg-coral px-7 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[var(--shadow-warm)] transition hover:-translate-y-0.5 hover:bg-coral-dark active:scale-95"
+                >
+                  Read the journal <span className="text-base">🍁</span>
+                </Link>
+                <Link
+                  href="/about"
+                  className="inline-flex items-center gap-2 rounded-full border border-coral/40 bg-white/60 px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-coral transition hover:bg-white active:scale-95"
+                >
+                  About me
+                </Link>
+              </div>
+            </Reveal>
           </div>
+
+          {/* Right — scrapbook of frames */}
+          <Reveal delay={0.12}>
+            <div className="relative mx-auto h-[420px] w-full max-w-[520px] md:h-[560px]">
+              <FloatFrame
+                seed={0}
+                caption="frames of mind"
+                rotate={-3}
+                delay={0}
+                floatRange={12}
+                aspect="aspect-[4/5]"
+                className="absolute left-[6%] top-[6%] w-[60%]"
+              />
+              <FloatFrame
+                seed={2}
+                caption="october light"
+                rotate={6}
+                delay={1.1}
+                floatRange={9}
+                aspect="aspect-square"
+                className="absolute right-[1%] top-0 w-[42%]"
+              />
+              <FloatFrame
+                seed={1}
+                caption="quiet pages"
+                rotate={-7}
+                delay={0.6}
+                floatRange={11}
+                aspect="aspect-[5/4]"
+                className="absolute bottom-[2%] left-0 w-[46%]"
+              />
+              {/* leaf accents */}
+              <span className="absolute right-[14%] bottom-[10%] text-3xl opacity-80">
+                🍂
+              </span>
+              <span className="absolute left-[40%] top-[2%] text-2xl opacity-70">
+                🍁
+              </span>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* Gallery */}
-      <section className="mx-auto max-w-[1440px] px-6 md:px-10">
-        <StaggerGrid className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {[0, 1, 2].map((i) => (
+      {/* ───────────────── Featured pull-quote ───────────────── */}
+      <section className="mx-auto max-w-[1440px] px-6 pt-20 md:px-10">
+        <Reveal>
+          <figure className="relative mx-auto max-w-4xl overflow-hidden rounded-[36px] border border-maple/15 bg-gradient-to-br from-peach/50 via-cream/40 to-salmon/30 px-8 py-14 text-center shadow-[var(--shadow-warm)] md:px-16 md:py-20">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute left-6 top-2 select-none font-display text-[9rem] leading-none text-coral/15 md:text-[12rem]"
+            >
+              &ldquo;
+            </span>
+            <blockquote className="relative font-display text-2xl font-medium italic leading-snug text-bark md:text-4xl">
+              Never stop fighting until you arrive at your destined place — that
+              is, the unique you.
+            </blockquote>
+            <figcaption className="mt-6 font-serif text-sm italic text-maple/70">
+              — a whisper carried on the autumn wind
+            </figcaption>
+            <span className="absolute bottom-6 right-8 text-3xl opacity-70">
+              🍁
+            </span>
+          </figure>
+        </Reveal>
+      </section>
+
+      {/* ───────────────── Moments gallery ───────────────── */}
+      <section className="mx-auto max-w-[1440px] px-6 pt-20 md:px-10">
+        <Reveal>
+          <div className="mb-10 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-maple/60">
+              a few moments
+            </p>
+            <h2 className="mt-2 font-display text-3xl font-bold text-bark md:text-4xl">
+              Pressed between the pages
+            </h2>
+          </div>
+        </Reveal>
+        <StaggerGrid className="mx-auto flex max-w-4xl flex-wrap items-start justify-center gap-8">
+          {[
+            { c: "morning ink", r: -4, a: "aspect-[4/5]" },
+            { c: "amber hours", r: 3, a: "aspect-square" },
+            { c: "last warmth", r: -3, a: "aspect-[4/5]" },
+          ].map((g, i) => (
             <StaggerItem key={i}>
-              <Thumb alt={`Gallery ${i + 1}`} seed={i + 1} framed className="h-72 w-full" />
+              <FloatFrame
+                seed={i + 1}
+                caption={g.c}
+                rotate={g.r}
+                delay={i * 0.4}
+                floatRange={8}
+                aspect={g.a}
+                className="w-52 md:w-60"
+              />
             </StaggerItem>
           ))}
         </StaggerGrid>
       </section>
 
       {/* Auth CTA */}
-      <section className="mx-auto mt-14 flex max-w-[1440px] justify-center px-6 md:px-10">
+      <section className="mx-auto mt-20 flex max-w-[1440px] justify-center px-6 md:px-10">
         <HomeGreeting />
       </section>
 
-      {/* Recent Blogs */}
-      <section className="mx-auto max-w-[1440px] px-6 pb-10 md:px-10">
+      {/* ───────────────── Recent Blogs ───────────────── */}
+      <section className="mx-auto max-w-[1440px] px-6 pb-16 pt-24 md:px-10">
         <Reveal>
-          <h2 className="mt-16 font-display text-3xl font-extrabold text-ink md:text-5xl">
-            Recent Blogs
-          </h2>
+          <div className="flex flex-col items-start justify-between gap-4 border-b border-maple/15 pb-6 sm:flex-row sm:items-end">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-maple/60">
+                latest from the journal
+              </p>
+              <h2 className="mt-2 font-display text-4xl font-extrabold text-bark md:text-5xl">
+                Recent Blogs
+              </h2>
+            </div>
+            <Link
+              href="/blogs"
+              className="group inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-coral transition"
+            >
+              Read all entries
+              <span className="transition-transform group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
+          </div>
         </Reveal>
-        <StaggerGrid className="mt-8 flex flex-col gap-6">
+
+        <StaggerGrid className="mt-10 flex flex-col gap-6">
           {blogs.length === 0 ? (
-            <p className="text-bark/60">No blogs yet — check back soon.</p>
+            <div className="rounded-3xl border border-dashed border-maple/30 bg-white/40 px-8 py-16 text-center">
+              <p className="text-3xl">🍂</p>
+              <p className="mt-3 font-serif text-lg italic text-bark/60">
+                The first leaves haven&apos;t fallen yet — new stories are on
+                their way.
+              </p>
+            </div>
           ) : (
             blogs.map((b, i) => (
               <StaggerItem key={b.id} lift={false}>
-                <BlogRow blog={b} seed={i} />
+                <div className="group flex items-stretch gap-4 md:gap-6">
+                  {/* index marker */}
+                  <div className="hidden flex-col items-center pt-6 md:flex">
+                    <span className="font-display text-2xl font-bold text-coral/40 transition-colors group-hover:text-coral">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="mt-2 w-px flex-1 bg-gradient-to-b from-maple/30 to-transparent" />
+                  </div>
+                  <div className="flex-1">
+                    <BlogRow blog={b} seed={i} />
+                  </div>
+                </div>
               </StaggerItem>
             ))
           )}
