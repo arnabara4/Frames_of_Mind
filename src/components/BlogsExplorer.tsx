@@ -23,8 +23,17 @@ function season(m: number): { emoji: string; grad: string; name: string } {
     return { emoji: "🌸", grad: "from-rose-100 to-emerald-50", name: "Spring" };
   if (m >= 5 && m <= 7)
     return { emoji: "☀️", grad: "from-amber-100 to-yellow-50", name: "Summer" };
-  return { emoji: "🍂", grad: "from-coral/20 to-amber/25", name: "Autumn" };
+  return { emoji: "🍂", grad: "from-coral/25 to-amber/30", name: "Autumn" };
 }
+
+/** Seasons as a board layout — each holds its three months. */
+const SEASONS: { name: string; emoji: string; grad: string; months: number[] }[] =
+  [
+    { name: "Winter", emoji: "❄️", grad: "from-sky-100 to-white", months: [11, 0, 1] },
+    { name: "Spring", emoji: "🌸", grad: "from-rose-100 to-emerald-50", months: [2, 3, 4] },
+    { name: "Summer", emoji: "☀️", grad: "from-amber-100 to-yellow-50", months: [5, 6, 7] },
+    { name: "Autumn", emoji: "🍂", grad: "from-coral/25 to-amber/30", months: [8, 9, 10] },
+  ];
 
 export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
   const { owner } = useAuth();
@@ -133,8 +142,9 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
         )}
       </div>
 
-      {/* ── Filter shelf — part of the page, autumn-styled ── */}
-      <div className="mt-8 rounded-[28px] border border-maple/15 bg-gradient-to-br from-peach/40 via-cream/60 to-salmon/25 p-4 shadow-[var(--shadow-warm)] backdrop-blur md:p-5">
+      {/* ── Filter shelf — part of the page, autumn-styled.
+           relative z-40 keeps its popovers above the posts grid below. ── */}
+      <div className="relative z-40 mt-8 rounded-[28px] border border-maple/15 bg-gradient-to-br from-peach/40 via-cream/60 to-salmon/25 p-4 shadow-[var(--shadow-warm)] md:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Search */}
           <div className="relative w-full lg:max-w-[18rem]">
@@ -172,38 +182,76 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
               label="Month"
               icon={<span>{month === "all" ? "🗓️" : season(month).emoji}</span>}
               summary={month === "all" ? "All" : MONTHS[month]}
-              panelClass="w-60"
+              panelClass="w-[88vw] max-w-[34rem]"
             >
               {(close) => (
-                <div className="flex flex-col gap-1">
-                  <Row
-                    active={month === "all"}
+                <div className="flex flex-col gap-2">
+                  {/* All months */}
+                  <button
+                    type="button"
                     onClick={() => {
                       setMonth("all");
                       close();
                     }}
-                    left={<span>🗓️</span>}
-                    label="All months"
-                  />
-                  {MONTHS.map((m, i) => {
-                    const s = season(i);
-                    return (
-                      <Row
-                        key={m}
-                        active={month === i}
-                        disabled={monthCounts[i] === 0}
-                        onClick={() => {
-                          setMonth(i);
-                          close();
-                        }}
-                        grad={s.grad}
-                        left={<span>{s.emoji}</span>}
-                        label={m}
-                        hint={s.name}
-                        count={monthCounts[i]}
-                      />
-                    );
-                  })}
+                    className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                      month === "all"
+                        ? "bg-coral text-white"
+                        : "bg-white/70 text-bark hover:bg-peach/50"
+                    }`}
+                  >
+                    🗓️ All months
+                  </button>
+
+                  {/* Season board: 4 quadrants, each with its 3 months */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {SEASONS.map((s) => (
+                      <div
+                        key={s.name}
+                        className={`rounded-2xl bg-gradient-to-br ${s.grad} p-2.5 ring-1 ring-maple/10`}
+                      >
+                        <div className="mb-1.5 flex items-center gap-1.5 px-1">
+                          <span>{s.emoji}</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-bark/70">
+                            {s.name}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1">
+                          {s.months.map((mi) => {
+                            const cnt = monthCounts[mi];
+                            const on = month === mi;
+                            return (
+                              <button
+                                key={mi}
+                                type="button"
+                                disabled={cnt === 0}
+                                onClick={() => {
+                                  setMonth(mi);
+                                  close();
+                                }}
+                                className={`relative flex flex-col items-center rounded-lg px-1 py-1.5 text-xs font-semibold transition active:scale-95 ${
+                                  on
+                                    ? "bg-coral text-white shadow-sm"
+                                    : cnt === 0
+                                      ? "cursor-not-allowed bg-white/40 text-bark/30"
+                                      : "bg-white/80 text-bark hover:bg-white"
+                                }`}
+                                title={`${MONTHS[mi]} — ${cnt} ${cnt === 1 ? "story" : "stories"}`}
+                              >
+                                {MONTHS[mi].slice(0, 3)}
+                                {cnt > 0 && (
+                                  <span
+                                    className={`mt-0.5 text-[9px] ${on ? "text-white/80" : "text-maple"}`}
+                                  >
+                                    {cnt}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </FancyDropdown>
