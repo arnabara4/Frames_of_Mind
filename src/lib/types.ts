@@ -1,4 +1,5 @@
 export type SectionKind = "title" | "paragraph" | "quote" | "image";
+export type Align = "left" | "center" | "right";
 
 export interface BlogSection {
   id: string;
@@ -6,8 +7,15 @@ export interface BlogSection {
   kind: SectionKind;
   content: string | null;
   image_url: string | null;
+  align: Align;
   position: number;
 }
+
+export const ALIGN_CLASS: Record<Align, string> = {
+  left: "text-left",
+  center: "text-center",
+  right: "text-right",
+};
 
 export interface Blog {
   id: string;

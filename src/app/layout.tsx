@@ -9,6 +9,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/components/AuthProvider";
+import LottieBackground from "@/components/LottieBackground";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -48,11 +49,14 @@ export default function RootLayout({
       lang="en"
       className={`${playfair.variable} ${inter.variable} ${inria.variable} ${inknut.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-white">
+      <body className="min-h-full">
+        <LottieBackground />
         <AuthProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <div className="relative z-10 flex min-h-screen flex-col">
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
         </AuthProvider>
       </body>
     </html>

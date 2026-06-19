@@ -1,5 +1,4 @@
 import Thumb from "@/components/Thumb";
-import FallingLeaves from "@/components/FallingLeaves";
 import { Reveal } from "@/components/motion";
 
 export const metadata = { title: "About — Frames of Mind" };
@@ -7,7 +6,6 @@ export const metadata = { title: "About — Frames of Mind" };
 export default function AboutPage() {
   return (
     <div className="relative overflow-hidden">
-      <FallingLeaves count={10} />
       <div className="relative z-10 mx-auto max-w-[1440px] px-6 py-12 md:px-10">
         <Reveal>
           <h1 className="font-display text-4xl font-extrabold text-coral md:text-6xl">

@@ -33,6 +33,7 @@ export default async function EditBlogPage({
       initial={{
         id: post.id,
         title: post.title,
+        cover_image: post.cover_image,
         sections: (sectionsData ?? []) as BlogSection[],
       }}
     />

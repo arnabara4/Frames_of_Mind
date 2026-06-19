@@ -3,7 +3,6 @@ import type { Blog } from "@/lib/types";
 import Thumb from "@/components/Thumb";
 import { BlogRow } from "@/components/BlogCard";
 import HomeGreeting from "@/components/HomeGreeting";
-import FallingLeaves from "@/components/FallingLeaves";
 import { Reveal, StaggerGrid, StaggerItem } from "@/components/motion";
 
 export const dynamic = "force-dynamic";
@@ -20,9 +19,8 @@ export default async function HomePage() {
 
   return (
     <div id="top">
-      {/* Hero with ambient falling leaves */}
+      {/* Hero */}
       <section className="relative overflow-hidden">
-        <FallingLeaves count={16} />
         <div className="relative z-10 mx-auto grid max-w-[1440px] grid-cols-1 gap-10 px-6 pt-12 md:grid-cols-2 md:px-10 md:pt-20">
           <Reveal>
             <Thumb

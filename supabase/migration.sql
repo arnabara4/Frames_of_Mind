@@ -20,8 +20,14 @@ create table if not exists public.blog_sections (
   kind       text not null check (kind in ('image','paragraph','title','quote')),
   content    text,
   image_url  text,
+  align      text not null default 'left' check (align in ('left','center','right')),
   position   int  not null default 0
 );
+
+-- Backfill for existing databases created before `align` existed.
+alter table public.blog_sections
+  add column if not exists align text not null default 'left'
+  check (align in ('left','center','right'));
 
 create table if not exists public.messages (
   id         uuid primary key default gen_random_uuid(),

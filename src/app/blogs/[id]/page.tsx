@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/types";
 import SectionRenderer from "@/components/SectionRenderer";
 import BlogOwnerActions from "@/components/BlogOwnerActions";
 import Thumb from "@/components/Thumb";
+import CoverFallback from "@/components/CoverFallback";
 import { Reveal } from "@/components/motion";
 
 export const dynamic = "force-dynamic";
@@ -49,13 +50,18 @@ export default async function BlogDetailPage({
 
       {/* Cover hero — flows straight into the meta + title below */}
       <Reveal className="mt-6">
-        <div className="relative">
-          <Thumb
-            src={post.cover_image}
-            alt={post.title}
-            seed={0}
-            className="h-64 w-full rounded-3xl md:h-96"
-          />
+        <div className="relative h-64 overflow-hidden rounded-3xl md:h-96">
+          {post.cover_image ? (
+            <Thumb
+              src={post.cover_image}
+              alt={post.title}
+              seed={0}
+              rounded="rounded-3xl"
+              className="h-full w-full"
+            />
+          ) : (
+            <CoverFallback count={16} />
+          )}
           <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-t from-bark/55 via-bark/10 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
             <p className="text-sm text-white/80">
