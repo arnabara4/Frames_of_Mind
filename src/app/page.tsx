@@ -5,18 +5,23 @@ import { BlogRow } from "@/components/BlogCard";
 import HomeGreeting from "@/components/HomeGreeting";
 import FloatFrame from "@/components/FloatFrame";
 import { Reveal, StaggerGrid, StaggerItem } from "@/components/motion";
+import { mergeHome } from "@/lib/home";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("blogs")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(3);
+  const [{ data }, { data: homeRow }] = await Promise.all([
+    supabase
+      .from("blogs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(3),
+    supabase.from("home_content").select("data").eq("key", "home").maybeSingle(),
+  ]);
 
   const blogs = (data ?? []) as Blog[];
+  const c = mergeHome(homeRow?.data);
 
   return (
     <div id="top">
@@ -27,31 +32,32 @@ export default async function HomePage() {
           aria-hidden
           className="pointer-events-none absolute -right-10 top-24 select-none font-script text-[20vw] font-bold leading-none text-coral/[0.06] md:top-16"
         >
-          Pranavi
+          {c.bgWord}
         </span>
 
         <div className="relative z-10 mx-auto grid max-w-[1440px] grid-cols-1 items-center gap-10 px-6 pt-14 md:grid-cols-[1.05fr_1fr] md:gap-6 md:px-10 md:pt-20">
           {/* Left — words */}
           <div className="flex flex-col gap-6">
             <Reveal>
-              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-maple/20 bg-white/60 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.25em] text-maple/80 backdrop-blur">
-                🍂 Frames of Mind · Autumn Journal
+              <span className="inline-flex w-fit items-center gap-2 font-script text-lg italic text-maple/80 md:text-xl">
+                <span aria-hidden className="text-xl not-italic text-coral">
+                  ❦
+                </span>
+                {c.kicker}
               </span>
             </Reveal>
 
             <Reveal delay={0.08}>
               <h1 className="font-display text-5xl font-extrabold leading-[1.02] text-bark md:text-7xl">
-                Collected thoughts,
+                {c.title}
                 <br />
-                like{" "}
-                <span className="italic text-coral">falling leaves.</span>
+                <span className="italic text-coral">{c.accent}</span>
               </h1>
             </Reveal>
 
             <Reveal delay={0.16}>
               <p className="max-w-md font-serif text-lg italic leading-relaxed text-bark/75 md:text-xl">
-                A sanctuary of words — where the written self steps forward when
-                the spoken one falters. Pull up a chair; the kettle&apos;s warm.
+                {c.subline}
               </p>
             </Reveal>
 
@@ -61,13 +67,13 @@ export default async function HomePage() {
                   href="/blogs"
                   className="inline-flex items-center gap-2 rounded-full bg-coral px-7 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[var(--shadow-warm)] transition hover:-translate-y-0.5 hover:bg-coral-dark active:scale-95"
                 >
-                  Read the journal <span className="text-base">🍁</span>
+                  {c.ctaPrimary} <span className="text-base">🍁</span>
                 </Link>
                 <Link
                   href="/about"
                   className="inline-flex items-center gap-2 rounded-full border border-coral/40 bg-white/60 px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-coral transition hover:bg-white active:scale-95"
                 >
-                  About me
+                  {c.ctaSecondary}
                 </Link>
               </div>
             </Reveal>
@@ -78,7 +84,9 @@ export default async function HomePage() {
             <div className="relative mx-auto h-[420px] w-full max-w-[520px] md:h-[560px]">
               <FloatFrame
                 seed={0}
-                caption="frames of mind"
+                ornate
+                src={c.frames[0].image_url}
+                caption={c.frames[0].caption}
                 rotate={-3}
                 delay={0}
                 floatRange={12}
@@ -87,7 +95,9 @@ export default async function HomePage() {
               />
               <FloatFrame
                 seed={2}
-                caption="october light"
+                ornate
+                src={c.frames[1].image_url}
+                caption={c.frames[1].caption}
                 rotate={6}
                 delay={1.1}
                 floatRange={9}
@@ -96,7 +106,9 @@ export default async function HomePage() {
               />
               <FloatFrame
                 seed={1}
-                caption="quiet pages"
+                ornate
+                src={c.frames[2].image_url}
+                caption={c.frames[2].caption}
                 rotate={-7}
                 delay={0.6}
                 floatRange={11}
@@ -126,11 +138,10 @@ export default async function HomePage() {
               &ldquo;
             </span>
             <blockquote className="relative font-display text-2xl font-medium italic leading-snug text-bark md:text-4xl">
-              Never stop fighting until you arrive at your destined place — that
-              is, the unique you.
+              {c.quote}
             </blockquote>
             <figcaption className="mt-6 font-serif text-sm italic text-maple/70">
-              — a whisper carried on the autumn wind
+              {c.quoteCaption}
             </figcaption>
             <span className="absolute bottom-6 right-8 text-3xl opacity-70">
               🍁
@@ -153,14 +164,15 @@ export default async function HomePage() {
         </Reveal>
         <StaggerGrid className="mx-auto flex max-w-4xl flex-wrap items-start justify-center gap-8">
           {[
-            { c: "morning ink", r: -4, a: "aspect-[4/5]" },
-            { c: "amber hours", r: 3, a: "aspect-square" },
-            { c: "last warmth", r: -3, a: "aspect-[4/5]" },
+            { r: -4, a: "aspect-[4/5]" },
+            { r: 3, a: "aspect-square" },
+            { r: -3, a: "aspect-[4/5]" },
           ].map((g, i) => (
             <StaggerItem key={i}>
               <FloatFrame
                 seed={i + 1}
-                caption={g.c}
+                src={c.gallery[i].image_url}
+                caption={c.gallery[i].caption}
                 rotate={g.r}
                 delay={i * 0.4}
                 floatRange={8}

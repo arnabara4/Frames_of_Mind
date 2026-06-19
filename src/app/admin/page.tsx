@@ -46,12 +46,26 @@ export default async function AdminPage() {
             Welcome back, Pranavi
           </h1>
         </div>
-        <Link
-          href="/blogs/new"
-          className="self-start rounded-xl bg-coral px-6 py-3 font-medium text-white shadow-sm transition hover:bg-coral-dark hover:shadow-md active:scale-95"
-        >
-          + New Blog
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/home"
+            className="self-start rounded-xl border border-coral/40 bg-white/60 px-5 py-3 font-medium text-coral transition hover:bg-coral hover:text-white active:scale-95"
+          >
+            ✎ Edit Home
+          </Link>
+          <Link
+            href="/about/edit"
+            className="self-start rounded-xl border border-coral/40 bg-white/60 px-5 py-3 font-medium text-coral transition hover:bg-coral hover:text-white active:scale-95"
+          >
+            ✎ Edit About
+          </Link>
+          <Link
+            href="/blogs/new"
+            className="self-start rounded-xl bg-coral px-6 py-3 font-medium text-white shadow-sm transition hover:bg-coral-dark hover:shadow-md active:scale-95"
+          >
+            + New Blog
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
