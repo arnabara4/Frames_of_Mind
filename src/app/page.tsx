@@ -115,13 +115,6 @@ export default async function HomePage() {
                 aspect="aspect-[5/4]"
                 className="absolute bottom-[2%] left-0 w-[46%]"
               />
-              {/* leaf accents */}
-              <span className="absolute right-[14%] bottom-[10%] text-3xl opacity-80">
-                🍂
-              </span>
-              <span className="absolute left-[40%] top-[2%] text-2xl opacity-70">
-                🍁
-              </span>
             </div>
           </Reveal>
         </div>
