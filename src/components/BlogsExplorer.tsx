@@ -6,6 +6,7 @@ import type { Blog } from "@/lib/types";
 import { BlogCard } from "@/components/BlogCard";
 import { useAuth } from "@/components/AuthProvider";
 import { StaggerGrid, StaggerItem } from "@/components/motion";
+import FancyDropdown from "@/components/FancyDropdown";
 
 const PER_PAGE = 8;
 
@@ -13,6 +14,17 @@ const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
+
+/** Seasonal motif per month — drives the emoji + soft background tint of each row. */
+function season(m: number): { emoji: string; grad: string; name: string } {
+  if (m === 11 || m === 0 || m === 1)
+    return { emoji: "❄️", grad: "from-sky-100 to-white", name: "Winter" };
+  if (m >= 2 && m <= 4)
+    return { emoji: "🌸", grad: "from-rose-100 to-emerald-50", name: "Spring" };
+  if (m >= 5 && m <= 7)
+    return { emoji: "☀️", grad: "from-amber-100 to-yellow-50", name: "Summer" };
+  return { emoji: "🍂", grad: "from-coral/20 to-amber/25", name: "Autumn" };
+}
 
 export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
   const { owner } = useAuth();
@@ -28,6 +40,26 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
     blogs.forEach((b) => set.add(new Date(b.created_at).getFullYear()));
     return [...set].sort((a, b) => b - a);
   }, [blogs]);
+
+  // Counts power the badges in the dropdowns.
+  const yearCounts = useMemo(() => {
+    const m = new Map<number, number>();
+    blogs.forEach((b) => {
+      const y = new Date(b.created_at).getFullYear();
+      m.set(y, (m.get(y) ?? 0) + 1);
+    });
+    return m;
+  }, [blogs]);
+
+  // Month counts respect the chosen year so the two pickers feel connected.
+  const monthCounts = useMemo(() => {
+    const arr = new Array(12).fill(0);
+    blogs.forEach((b) => {
+      const d = new Date(b.created_at);
+      if (year === "all" || d.getFullYear() === year) arr[d.getMonth()]++;
+    });
+    return arr;
+  }, [blogs, year]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -105,7 +137,7 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
       <div className="mt-8 rounded-[28px] border border-maple/15 bg-gradient-to-br from-peach/40 via-cream/60 to-salmon/25 p-4 shadow-[var(--shadow-warm)] backdrop-blur md:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Search */}
-          <div className="relative w-full lg:max-w-xs">
+          <div className="relative w-full lg:max-w-[18rem]">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-maple/60">
               ⌕
             </span>
@@ -118,29 +150,99 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
             />
           </div>
 
+          {/* Center ornament — fills the middle, reflects the selection */}
+          <div className="hidden flex-1 flex-col items-center justify-center px-4 text-center lg:flex">
+            <p className="font-display text-lg font-semibold text-coral">
+              {month === "all" && year === "all"
+                ? "Wander through the seasons"
+                : `${month === "all" ? "" : MONTHS[month] + " "}${year === "all" ? "" : year}`.trim()}
+            </p>
+            <p className="mt-0.5 flex items-center gap-1.5 font-serif text-xs italic text-maple/70">
+              <span>🍂</span>
+              {month === "all" && year === "all"
+                ? "every story, every autumn"
+                : `${filtered.length} ${filtered.length === 1 ? "story" : "stories"} found`}
+              <span>🍁</span>
+            </p>
+          </div>
+
           {/* Month + Year pickers */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-widest text-maple/60">
-              🍂 Filter by date
-            </span>
-            <Select
+            <FancyDropdown
               label="Month"
-              value={month === "all" ? "all" : String(month)}
-              onChange={(v) => setMonth(v === "all" ? "all" : Number(v))}
-              options={[
-                { value: "all", label: "All months" },
-                ...MONTHS.map((m, i) => ({ value: String(i), label: m })),
-              ]}
-            />
-            <Select
+              icon={<span>{month === "all" ? "🗓️" : season(month).emoji}</span>}
+              summary={month === "all" ? "All" : MONTHS[month]}
+              panelClass="w-60"
+            >
+              {(close) => (
+                <div className="flex flex-col gap-1">
+                  <Row
+                    active={month === "all"}
+                    onClick={() => {
+                      setMonth("all");
+                      close();
+                    }}
+                    left={<span>🗓️</span>}
+                    label="All months"
+                  />
+                  {MONTHS.map((m, i) => {
+                    const s = season(i);
+                    return (
+                      <Row
+                        key={m}
+                        active={month === i}
+                        disabled={monthCounts[i] === 0}
+                        onClick={() => {
+                          setMonth(i);
+                          close();
+                        }}
+                        grad={s.grad}
+                        left={<span>{s.emoji}</span>}
+                        label={m}
+                        hint={s.name}
+                        count={monthCounts[i]}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </FancyDropdown>
+
+            <FancyDropdown
               label="Year"
-              value={year === "all" ? "all" : String(year)}
-              onChange={(v) => setYear(v === "all" ? "all" : Number(v))}
-              options={[
-                { value: "all", label: "All years" },
-                ...years.map((y) => ({ value: String(y), label: String(y) })),
-              ]}
-            />
+              icon={<span>🍁</span>}
+              summary={year === "all" ? "All" : String(year)}
+              panelClass="w-56"
+            >
+              {(close) => (
+                <div className="flex flex-col gap-1">
+                  <Row
+                    active={year === "all"}
+                    onClick={() => {
+                      setYear("all");
+                      close();
+                    }}
+                    left={<span>🍁</span>}
+                    label="All years"
+                  />
+                  {years.map((y) => (
+                    <Row
+                      key={y}
+                      active={year === y}
+                      onClick={() => {
+                        setYear(y);
+                        close();
+                      }}
+                      left={<YearRing year={y} />}
+                      label={String(y)}
+                      hint="a year of leaves"
+                      count={yearCounts.get(y) ?? 0}
+                    />
+                  ))}
+                </div>
+              )}
+            </FancyDropdown>
+
             {hasFilter && (
               <button
                 onClick={() => {
@@ -248,35 +350,88 @@ export default function BlogsExplorer({ blogs }: { blogs: Blog[] }) {
   );
 }
 
-function Select({
+/** One selectable row inside a fancy dropdown, with seasonal tint + count badge. */
+function Row({
+  active,
+  disabled,
+  onClick,
+  left,
   label,
-  value,
-  onChange,
-  options,
+  hint,
+  count,
+  grad,
 }: {
+  active?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  left: React.ReactNode;
   label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
+  hint?: string;
+  count?: number;
+  grad?: string;
 }) {
   return (
-    <label className="relative">
-      <span className="sr-only">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="cursor-pointer appearance-none rounded-full border border-maple/20 bg-white/80 py-2 pl-4 pr-9 text-sm font-medium text-bark/80 outline-none transition hover:border-coral focus:border-coral"
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-      <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-maple/60">
-        ▾
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition ${
+        active
+          ? "bg-coral text-white shadow-sm"
+          : disabled
+            ? "cursor-not-allowed opacity-40"
+            : grad
+              ? `bg-gradient-to-r ${grad} hover:brightness-105`
+              : "hover:bg-peach/50"
+      }`}
+    >
+      <span className="grid h-7 w-7 place-items-center text-base">{left}</span>
+      <span className="flex flex-1 flex-col leading-tight">
+        <span
+          className={`text-sm font-semibold ${active ? "text-white" : "text-bark"}`}
+        >
+          {label}
+        </span>
+        {hint && (
+          <span
+            className={`text-[10px] ${active ? "text-white/80" : "text-bark/50"}`}
+          >
+            {hint}
+          </span>
+        )}
       </span>
-    </label>
+      {typeof count === "number" && (
+        <span
+          className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+            active
+              ? "bg-white/25 text-white"
+              : "bg-white/70 text-maple ring-1 ring-maple/15"
+          }`}
+        >
+          {count}
+        </span>
+      )}
+    </button>
+  );
+}
+
+/** A little tree-ring badge for each year — autumn-unique flourish. */
+function YearRing({ year }: { year: number }) {
+  const rings = (year % 3) + 2; // 2–4 concentric rings, varies by year
+  return (
+    <span className="relative grid h-6 w-6 place-items-center">
+      {Array.from({ length: rings }).map((_, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full border border-maple/50"
+          style={{
+            width: `${100 - i * 26}%`,
+            height: `${100 - i * 26}%`,
+          }}
+        />
+      ))}
+      <span className="h-1 w-1 rounded-full bg-coral" />
+    </span>
   );
 }
 
