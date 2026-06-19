@@ -97,7 +97,10 @@ export interface BlogWithSections extends Blog {
 
 export function formatDate(iso: string): string {
   const d = new Date(iso);
+  // Force UTC so the server (UTC) and client (local TZ) render the SAME string
+  // — otherwise dates near midnight differ and cause a hydration mismatch.
   return d.toLocaleDateString("en-US", {
+    timeZone: "UTC",
     month: "long",
     day: "numeric",
     year: "numeric",

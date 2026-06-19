@@ -34,7 +34,12 @@ interface Drop {
  */
 export default function FallingLeaves({ count = 14 }: { count?: number }) {
   const reduce = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Random leaf positions differ between server and client renders, so only
+  // render after mount (client-only) to avoid a hydration mismatch.
+  useEffect(() => setMounted(true), []);
 
   // Thin out the leaves on small screens to protect mobile GPU/scroll perf.
   useEffect(() => {
@@ -61,7 +66,7 @@ export default function FallingLeaves({ count = 14 }: { count?: number }) {
     }));
   }, [effectiveCount]);
 
-  if (reduce) return null;
+  if (reduce || !mounted) return null;
 
   return (
     <div
