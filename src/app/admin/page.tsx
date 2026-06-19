@@ -48,6 +48,12 @@ export default async function AdminPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
+            href="/admin/messages"
+            className="self-start rounded-xl border border-coral/40 bg-white/60 px-5 py-3 font-medium text-coral transition hover:bg-coral hover:text-white active:scale-95"
+          >
+            ✉ Messages
+          </Link>
+          <Link
             href="/admin/home"
             className="self-start rounded-xl border border-coral/40 bg-white/60 px-5 py-3 font-medium text-coral transition hover:bg-coral hover:text-white active:scale-95"
           >
@@ -71,7 +77,9 @@ export default async function AdminPage() {
       {/* Stats */}
       <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Stat label="Published" value={blogs.length} />
-        <Stat label="Messages" value={messages.length} />
+        <Link href="/admin/messages" className="block transition active:scale-95">
+          <Stat label="Messages" value={messages.length} hint="view inbox →" />
+        </Link>
         <Stat
           label="Latest post"
           value={blogs[0] ? formatDate(blogs[0].created_at) : "—"}
@@ -114,45 +122,6 @@ export default async function AdminPage() {
         </div>
       </section>
 
-      {/* Inbox */}
-      <section className="mt-12">
-        <h2 className="font-display text-2xl font-bold text-ink">
-          Contact messages
-        </h2>
-        <div className="mt-4 flex flex-col gap-4">
-          {messages.length === 0 ? (
-            <p className="rounded-2xl bg-white px-6 py-8 text-ink/50 ring-1 ring-black/5">
-              No messages yet.
-            </p>
-          ) : (
-            messages.map((m) => (
-              <div
-                key={m.id}
-                className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-black/5 transition hover:shadow-md"
-              >
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="font-semibold text-ink">
-                    {[m.first_name, m.last_name].filter(Boolean).join(" ") ||
-                      "Anonymous"}
-                  </p>
-                  <p className="text-sm text-ink/40">
-                    {formatDate(m.created_at)}
-                  </p>
-                </div>
-                {m.email && (
-                  <a
-                    href={`mailto:${m.email}`}
-                    className="text-sm text-coral hover:underline"
-                  >
-                    {m.email}
-                  </a>
-                )}
-                <p className="mt-2 whitespace-pre-wrap text-ink/80">{m.body}</p>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
     </div>
   );
 }
@@ -161,13 +130,15 @@ function Stat({
   label,
   value,
   small,
+  hint,
 }: {
   label: string;
   value: string | number;
   small?: boolean;
+  hint?: string;
 }) {
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-peach/60 to-salmon/40 p-5 ring-1 ring-black/5">
+    <div className="h-full rounded-2xl bg-gradient-to-br from-peach/60 to-salmon/40 p-5 ring-1 ring-black/5">
       <p className="text-xs uppercase tracking-widest text-ink/50">{label}</p>
       <p
         className={`mt-1 font-display font-bold text-coral ${
@@ -176,6 +147,7 @@ function Stat({
       >
         {value}
       </p>
+      {hint && <p className="mt-1 text-xs font-medium text-coral/70">{hint}</p>}
     </div>
   );
 }
