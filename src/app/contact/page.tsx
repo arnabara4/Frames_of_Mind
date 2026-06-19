@@ -16,20 +16,88 @@ export default function ContactPage() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
 
+  // Email verification (OTP) state
+  const [otpStage, setOtpStage] = useState<"idle" | "sent" | "verified">("idle");
+  const [code, setCode] = useState("");
+  const [token, setToken] = useState<string | null>(null);
+  const [otpBusy, setOtpBusy] = useState(false);
+  const [otpMsg, setOtpMsg] = useState<string | null>(null);
+
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
+
   const set =
     (k: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  // Changing the email invalidates any prior verification.
+  const onEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, email: e.target.value }));
+    setOtpStage("idle");
+    setToken(null);
+    setCode("");
+    setOtpMsg(null);
+  };
+
+  async function sendCode() {
+    setOtpBusy(true);
+    setOtpMsg(null);
+    try {
+      const res = await fetch("/api/otp/send", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: form.email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        setOtpMsg(data.error ?? "Couldn't send a code.");
+      } else {
+        setOtpStage("sent");
+        setOtpMsg("Code sent — check your inbox.");
+      }
+    } catch {
+      setOtpMsg("Network error — try again.");
+    }
+    setOtpBusy(false);
+  }
+
+  async function confirmCode() {
+    setOtpBusy(true);
+    setOtpMsg(null);
+    try {
+      const res = await fetch("/api/otp/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: form.email, code }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        setOtpMsg(data.error ?? "Invalid code.");
+      } else {
+        setToken(data.token);
+        setOtpStage("verified");
+        setOtpMsg(null);
+      }
+    } catch {
+      setOtpMsg("Network error — try again.");
+    }
+    setOtpBusy(false);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!token) {
+      setStatus("error");
+      setError("Please verify your email first.");
+      return;
+    }
     setStatus("sending");
     setError(null);
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, website }),
+        body: JSON.stringify({ ...form, website, token }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
@@ -39,6 +107,9 @@ export default function ContactPage() {
       }
       setStatus("sent");
       setForm({ first_name: "", last_name: "", email: "", body: "" });
+      setOtpStage("idle");
+      setToken(null);
+      setCode("");
     } catch {
       setStatus("error");
       setError("Network error — please try again.");
@@ -172,14 +243,73 @@ export default function ContactPage() {
                     placeholder="Singhal"
                   />
                 </div>
-                <Field
-                  label="Email"
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={set("email")}
-                  placeholder="you@example.com"
-                />
+                <div>
+                  <Field
+                    label="Email"
+                    type="email"
+                    required
+                    value={form.email}
+                    onChange={onEmail}
+                    placeholder="you@example.com"
+                  />
+
+                  {/* Email verification (OTP) */}
+                  <div className="mt-2">
+                    {otpStage === "verified" ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1.5 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-500/20">
+                        ✓ Email verified
+                      </span>
+                    ) : otpStage === "sent" ? (
+                      <div className="flex flex-col gap-2 rounded-xl border border-maple/20 bg-cream/40 p-3">
+                        <p className="text-xs text-bark/60">
+                          Enter the 6-digit code sent to{" "}
+                          <span className="font-semibold">{form.email}</span>.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <input
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={code}
+                            onChange={(e) =>
+                              setCode(e.target.value.replace(/\D/g, ""))
+                            }
+                            placeholder="123456"
+                            className="w-32 rounded-lg border border-maple/20 bg-white px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-coral"
+                          />
+                          <button
+                            type="button"
+                            onClick={confirmCode}
+                            disabled={otpBusy || code.length < 6}
+                            className="rounded-full bg-coral px-5 py-2 text-sm font-semibold text-white transition hover:bg-coral-dark active:scale-95 disabled:opacity-50"
+                          >
+                            {otpBusy ? "Checking…" : "Confirm"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={sendCode}
+                            disabled={otpBusy}
+                            className="text-xs font-medium text-coral hover:underline"
+                          >
+                            Resend
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={sendCode}
+                        disabled={!emailValid || otpBusy}
+                        className="rounded-full border border-coral/40 px-4 py-1.5 text-sm font-semibold text-coral transition hover:bg-coral hover:text-white active:scale-95 disabled:opacity-50"
+                      >
+                        {otpBusy ? "Sending…" : "✉ Verify email to send"}
+                      </button>
+                    )}
+                    {otpMsg && (
+                      <p className="mt-1.5 text-xs text-bark/60">{otpMsg}</p>
+                    )}
+                  </div>
+                </div>
+
                 <label className="block">
                   <span className="text-xs font-semibold uppercase tracking-widest text-maple/70">
                     Message
@@ -202,9 +332,10 @@ export default function ContactPage() {
 
                 <motion.button
                   type="submit"
-                  disabled={status === "sending"}
+                  disabled={status === "sending" || !token}
                   whileTap={{ scale: 0.97 }}
-                  className="mt-1 inline-flex items-center justify-center gap-2 self-start rounded-full bg-coral px-9 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[var(--shadow-warm)] transition hover:bg-coral-dark disabled:opacity-60"
+                  title={!token ? "Verify your email first" : undefined}
+                  className="mt-1 inline-flex items-center justify-center gap-2 self-start rounded-full bg-coral px-9 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[var(--shadow-warm)] transition hover:bg-coral-dark disabled:opacity-50"
                 >
                   {status === "sending" ? (
                     "Sending…"

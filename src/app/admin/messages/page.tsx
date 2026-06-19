@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isOwner } from "@/lib/auth";
-import MessageCard, { type Message } from "@/components/MessageCard";
+import type { Message } from "@/components/MessageCard";
+import MessagesInbox from "@/components/MessagesInbox";
 
 export const dynamic = "force-dynamic";
 
@@ -38,20 +39,7 @@ export default async function AdminMessagesPage() {
         What&apos;s on their minds
       </h1>
 
-      {messages.length === 0 ? (
-        <div className="mt-10 rounded-3xl border border-dashed border-maple/30 bg-white/40 px-8 py-16 text-center">
-          <p className="text-3xl">🍂</p>
-          <p className="mt-3 font-serif text-lg italic text-bark/60">
-            No messages yet — the mailbox is quiet for now.
-          </p>
-        </div>
-      ) : (
-        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
-          {messages.map((m, i) => (
-            <MessageCard key={m.id} message={m} index={i} />
-          ))}
-        </div>
-      )}
+      <MessagesInbox messages={messages} />
     </div>
   );
 }
