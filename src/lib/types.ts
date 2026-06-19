@@ -17,6 +17,56 @@ export const ALIGN_CLASS: Record<Align, string> = {
   right: "text-right",
 };
 
+/* ── About page builder ─────────────────────────────────────────────── */
+export type AboutKind =
+  | "heading"
+  | "paragraph"
+  | "list"
+  | "quote"
+  | "image"
+  | "divider";
+export type FontChoice = "display" | "serif" | "sans";
+export type TextSize = "sm" | "md" | "lg" | "xl";
+export type ImgWidth = "sm" | "md" | "lg" | "full";
+
+export interface AboutBlock {
+  id: string;
+  kind: AboutKind;
+  content: string | null;
+  image_url: string | null;
+  align: Align;
+  font: FontChoice;
+  size: TextSize;
+  img_width: ImgWidth;
+  position: number;
+}
+
+export const FONT_CLASS: Record<FontChoice, string> = {
+  display: "font-display",
+  serif: "font-serif",
+  sans: "font-body",
+};
+
+export const SIZE_CLASS: Record<TextSize, string> = {
+  sm: "text-base",
+  md: "text-lg",
+  lg: "text-2xl",
+  xl: "text-4xl md:text-5xl",
+};
+
+export const IMG_WIDTH_CLASS: Record<ImgWidth, string> = {
+  sm: "max-w-xs",
+  md: "max-w-md",
+  lg: "max-w-2xl",
+  full: "max-w-full",
+};
+
+export const FONT_LABEL: Record<FontChoice, string> = {
+  display: "Display",
+  serif: "Serif",
+  sans: "Sans",
+};
+
 export interface Blog {
   id: string;
   title: string;

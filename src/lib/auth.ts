@@ -9,7 +9,7 @@ export function isOwner(user: User | null | undefined): boolean {
 }
 
 /** Routes that require the owner. */
-export const PROTECTED_PREFIXES = ["/blogs/new", "/admin"];
+export const PROTECTED_PREFIXES = ["/blogs/new", "/admin", "/about/edit"];
 
 export function isProtectedPath(pathname: string): boolean {
   if (PROTECTED_PREFIXES.some((p) => pathname.startsWith(p))) return true;
