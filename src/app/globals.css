@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --color-coral: #e35336;
+  --color-coral-dark: #c8432a;
+  --color-peach: #ffccc1;
+  --color-salmon: #f4a896;
+  --color-graybox: #d9d9d9;
+  --color-ink: #1a1a1a;
+
+  --font-display: var(--font-playfair);
+  --font-body: var(--font-inter);
+  --font-serif: var(--font-inria);
+  --font-script: var(--font-inknut);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+}
+
+/* Underline-style inputs used on the contact form */
+.input-underline {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #6b3b30;
+  outline: none;
+  width: 100%;
+  padding: 6px 2px;
+}
+.input-underline:focus {
+  border-color: var(--color-coral);
+}
