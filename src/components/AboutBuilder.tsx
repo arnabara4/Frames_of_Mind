@@ -11,6 +11,7 @@ import Thumb from "@/components/Thumb";
 import { renderRich } from "@/lib/format";
 import { ALIGN_CLASS, FONT_CLASS, SIZE_CLASS } from "@/lib/types";
 import type { AboutBlock, AboutKind } from "@/lib/types";
+import { revalidatePaths } from "@/lib/revalidate";
 
 const ADD: { kind: AboutKind; label: string; icon: string }[] = [
   { kind: "heading", label: "Heading", icon: "H" },
@@ -151,6 +152,7 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
       setError(err.message);
       return;
     }
+    await revalidatePaths(["/about"]);
     setSaved(true);
     router.refresh();
   }

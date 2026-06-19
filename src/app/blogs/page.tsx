@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { Blog } from "@/lib/types";
 import BlogsExplorer from "@/components/BlogsExplorer";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function BlogsPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("blogs")
     .select("*")

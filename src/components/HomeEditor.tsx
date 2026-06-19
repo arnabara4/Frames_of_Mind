@@ -9,6 +9,7 @@ import { useAuth } from "@/components/AuthProvider";
 import ImageUpload from "@/components/ImageUpload";
 import Thumb from "@/components/Thumb";
 import { mergeHome, type FrameItem, type HomeContent } from "@/lib/home";
+import { revalidatePaths } from "@/lib/revalidate";
 
 function Field({
   label,
@@ -132,6 +133,7 @@ export default function HomeEditor({
       .eq("key", "home");
     setSaving(false);
     if (err) return setError(err.message);
+    await revalidatePaths(["/"]);
     setSaved(true);
     router.refresh();
   }

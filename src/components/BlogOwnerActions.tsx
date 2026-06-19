@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { revalidatePaths } from "@/lib/revalidate";
 
 /** Edit / Delete controls shown on a blog detail page — owner only. */
 export default function BlogOwnerActions({ blogId }: { blogId: string }) {
@@ -19,6 +20,7 @@ export default function BlogOwnerActions({ blogId }: { blogId: string }) {
   async function handleDelete() {
     setBusy(true);
     await supabase.from("blogs").delete().eq("id", blogId);
+    await revalidatePaths(["/", "/blogs"]);
     router.push("/blogs");
     router.refresh();
   }

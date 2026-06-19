@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { Blog } from "@/lib/types";
 import { BlogRow } from "@/components/BlogCard";
 import HomeGreeting from "@/components/HomeGreeting";
@@ -7,10 +7,10 @@ import FloatFrame from "@/components/FloatFrame";
 import { Reveal, StaggerGrid, StaggerItem } from "@/components/motion";
 import { mergeHome } from "@/lib/home";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function HomePage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const [{ data }, { data: homeRow }] = await Promise.all([
     supabase
       .from("blogs")

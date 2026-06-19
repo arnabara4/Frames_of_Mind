@@ -1,11 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
+// Tiny warm blur shown while the real image streams in (prevents flashes).
+const BLUR =
+  "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='10'%3E%3Crect width='8' height='10' fill='%23f6c3b0'/%3E%3C/svg%3E";
+
 /**
- * Image with a graceful autumn placeholder and an optional "framed" treatment
- * (elegant border, rounded corners, warm drop shadow). If the src is missing or
- * fails to load, it falls back to a warm gradient block so the layout never breaks.
+ * Image with a graceful autumn placeholder and an optional "framed" treatment.
+ * Uses next/image (AVIF/WebP, responsive srcset, lazy by default) and falls back
+ * to a warm gradient if the src is missing or fails to load.
  */
 export default function Thumb({
   src,
@@ -14,6 +19,8 @@ export default function Thumb({
   seed = 0,
   framed = false,
   rounded = "rounded-2xl",
+  priority = false,
+  sizes = "(max-width: 768px) 100vw, 50vw",
 }: {
   src?: string | null;
   alt?: string;
@@ -21,13 +28,11 @@ export default function Thumb({
   seed?: number;
   framed?: boolean;
   rounded?: string;
+  priority?: boolean;
+  sizes?: string;
 }) {
   const [failed, setFailed] = useState(false);
-
-  // Reset the error state if the src changes (e.g. live editor preview).
-  useEffect(() => {
-    setFailed(false);
-  }, [src]);
+  useEffect(() => setFailed(false), [src]);
 
   const frame = framed
     ? "p-1.5 bg-gradient-to-br from-white to-peach/40 shadow-[var(--shadow-warm)] ring-1 ring-maple/15"
@@ -47,13 +52,16 @@ export default function Thumb({
     <div className={`overflow-hidden ${rounded} ${frame} ${className}`}>
       <div className={`relative h-full w-full overflow-hidden ${rounded}`}>
         {showImg ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={src as string}
             alt={alt ?? ""}
-            loading="lazy"
+            fill
+            sizes={sizes}
+            priority={priority}
+            placeholder="blur"
+            blurDataURL={BLUR}
             onError={() => setFailed(true)}
-            className="h-full w-full object-cover transition duration-700 hover:scale-[1.04]"
+            className="object-cover transition duration-700 hover:scale-[1.04]"
           />
         ) : (
           <div

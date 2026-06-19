@@ -10,6 +10,7 @@ import Thumb from "@/components/Thumb";
 import CoverFallback from "@/components/CoverFallback";
 import ImageUpload from "@/components/ImageUpload";
 import type { BlogSection, SectionKind } from "@/lib/types";
+import { revalidatePaths } from "@/lib/revalidate";
 
 const TABS: { kind: SectionKind; label: string; icon: string }[] = [
   { kind: "title", label: "Heading", icon: "H" },
@@ -124,6 +125,7 @@ export default function BlogEditor({ initial }: { initial?: EditorInitial }) {
       if (secErr) return fail(secErr.message);
     }
 
+    await revalidatePaths(["/", "/blogs", `/blogs/${blogId}`]);
     router.push(`/blogs/${blogId}`);
     router.refresh();
   }

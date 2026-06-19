@@ -1,14 +1,14 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { AboutBlock } from "@/lib/types";
 import AboutBlockView from "@/components/AboutBlockView";
 import OwnerEditLink from "@/components/OwnerEditLink";
 import { Reveal } from "@/components/motion";
 
-export const dynamic = "force-dynamic";
-export const metadata = { title: "About — Frames of Mind" };
+export const revalidate = 60;
+export const metadata = { title: "About" };
 
 export default async function AboutPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("about_blocks")
     .select("*")

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import LottiePlayer from "@/components/LottiePlayer";
 import { useAuth } from "@/components/AuthProvider";
 
 /* ── Minimal line icons (autumn-soft, stroke = currentColor) ──────────── */
@@ -89,7 +89,7 @@ export default function Navbar() {
       <nav className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-5 md:px-10">
         {/* Brand */}
         <Link href="/" className="group flex items-center gap-2.5">
-          <DotLottieReact
+          <LottiePlayer
             src="/lottifiles/october-go.lottie"
             loop
             autoplay

@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import LottiePlayer from "@/components/LottiePlayer";
 import { createClient } from "@/lib/supabase/client";
 
 function LoginForm() {
@@ -41,7 +41,7 @@ function LoginForm() {
       >
         {/* Decorative panel with the teapot */}
         <div className="relative flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-peach/70 via-cream/40 to-salmon/40 p-8 text-center md:p-10">
-          <DotLottieReact
+          <LottiePlayer
             src="/lottifiles/teapot.lottie"
             loop
             autoplay

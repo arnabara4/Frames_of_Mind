@@ -1,6 +1,6 @@
 "use client";
 
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import LottiePlayer from "@/components/LottiePlayer";
 import { useReducedMotion } from "framer-motion";
 
 /**
@@ -17,7 +17,7 @@ export default function LottieBackground() {
       aria-hidden
       className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
     >
-      <DotLottieReact
+      <LottiePlayer
         src="/lottifiles/autumn-fall.lottie"
         loop
         autoplay

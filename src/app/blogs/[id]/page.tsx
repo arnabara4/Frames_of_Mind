@@ -118,6 +118,8 @@ export default async function BlogDetailPage({
               seed={0}
               rounded="rounded-3xl"
               className="h-full w-full"
+              priority
+              sizes="(max-width: 1000px) 100vw, 1000px"
             />
           ) : (
             <CoverFallback count={16} />
