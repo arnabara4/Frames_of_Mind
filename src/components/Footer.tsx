@@ -85,7 +85,7 @@ export default function Footer() {
 
         {/* Divider + copyright */}
         <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-white/15 pt-6 text-sm text-white/70 md:flex-row">
-          <p>© 2025 Arnab Jena. All rights reserved.</p>
+          <p>© 2025 Frames of Mind. All rights reserved.</p>
           <p className="font-serif italic">Made with autumn &amp; ink.</p>
         </div>
       </div>

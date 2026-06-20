@@ -2,24 +2,11 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
-
-function greetingWord(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  if (h < 21) return "Good evening";
-  return "Good night";
-}
 
 export default function HomeGreeting() {
   const { owner, loading } = useAuth();
-  const [hello, setHello] = useState("Welcome back");
-
-  useEffect(() => {
-    setHello(greetingWord());
-  }, []);
+  const hello = "The frame is yours";
 
   // Guests see nothing here; only the owner gets the greeting + write CTA.
   if (loading || !owner) return null;

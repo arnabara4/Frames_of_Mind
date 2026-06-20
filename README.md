@@ -1,7 +1,7 @@
 # Frames of Mind
 
-A personal, anime-themed blog built from the **Pranavi-Gift** Figma design. Owner (Arnab) can log in to
-write section-based blog posts; guests get a read-only experience.
+A personal, anime-themed autumn blog. The owner can log in to write section-based blog posts;
+guests get a read-only experience.
 
 ## Stack
 - **Next.js 16** (App Router) + **TypeScript**
@@ -11,7 +11,7 @@ write section-based blog posts; guests get a read-only experience.
 ## Pages
 | Route | Description |
 |---|---|
-| `/` | Home — hero, "MY THOUGHTS", gallery, Recent Blogs, LOG-IN / WELCOME ARNAB |
+| `/` | Home — hero, "MY THOUGHTS", gallery, Recent Blogs, owner greeting when logged in |
 | `/blogs` | Blog grid with search; ADD BLOG button when logged in |
 | `/blogs/[id]` | Blog detail — renders title/quote/paragraph/image sections |
 | `/blogs/new` | Section editor (owner only; guests redirected to login) |
@@ -37,11 +37,8 @@ RLS: blogs/sections are public-read, authenticated-write; messages are public-in
 4. `npm run dev` → http://localhost:3000
 
 ## Owner login
-```
-email:    pranavi@frame.com
-password: pranavi123
-```
-Any authenticated user is treated as the owner (single-owner model).
+Credentials are private and not stored in the repo. The owner email is set via the
+`OWNER_EMAILS` server env var; the password lives only in Supabase Auth.
 
 ## Notes
 - Image placeholders: the Figma artwork is replaced by coral/peach gradient blocks (`src/components/Thumb.tsx`).

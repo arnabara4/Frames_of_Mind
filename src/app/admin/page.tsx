@@ -43,7 +43,7 @@ export default async function AdminPage() {
             Owner dashboard
           </p>
           <h1 className="font-display text-4xl font-extrabold text-coral md:text-5xl">
-            Welcome back, Pranavi
+            Welcome back
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">

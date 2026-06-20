@@ -93,7 +93,7 @@ export default function ContactPage() {
             </li>
           </ul>
 
-          <p className="mt-10 font-script text-2xl text-coral/80">— Pranavi</p>
+          <p className="mt-10 font-script text-2xl text-coral/80">— Frames of Mind</p>
         </motion.aside>
 
         {/* ── Form card ── */}
@@ -154,8 +154,8 @@ export default function ContactPage() {
                   className="absolute left-[-9999px] h-0 w-0 opacity-0"
                 />
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <Field label="First Name" required value={form.first_name} onChange={set("first_name")} placeholder="Pranavi" />
-                  <Field label="Last Name" value={form.last_name} onChange={set("last_name")} placeholder="Singhal" />
+                  <Field label="First Name" required value={form.first_name} onChange={set("first_name")} placeholder="Your first name" />
+                  <Field label="Last Name" value={form.last_name} onChange={set("last_name")} placeholder="Your last name" />
                 </div>
                 <Field label="Email" type="email" required value={form.email} onChange={set("email")} placeholder="you@example.com" />
                 <label className="block">
