@@ -284,6 +284,20 @@ function MobileDrawer({
       : []),
   ];
 
+  // Staggered reveal for the menu rows — a little dopamine on open.
+  const listV = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.055, delayChildren: 0.12 } },
+  };
+  const rowV = {
+    hidden: { opacity: 0, x: 28 },
+    show: {
+      opacity: 1,
+      x: 0,
+      transition: { type: "spring" as const, stiffness: 400, damping: 30 },
+    },
+  };
+
   return (
     <AnimatePresence>
       {open && (
@@ -293,72 +307,132 @@ function MobileDrawer({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-[60] bg-bark/55 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-[60] bg-bark/50 backdrop-blur-sm md:hidden"
           />
           <motion.aside
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 360, damping: 38 }}
-            style={{ backgroundColor: "#fff7f0" }}
-            className="fixed right-0 top-0 z-[70] flex h-full w-[80%] max-w-xs flex-col gap-2 border-l border-maple/20 p-5 pt-5 shadow-2xl md:hidden"
+            className="fixed right-0 top-0 z-[70] flex h-full w-[82%] max-w-xs flex-col overflow-hidden border-l border-white/40 bg-gradient-to-br from-cream/80 via-cream/65 to-peach/55 p-5 pt-5 shadow-[-24px_0_60px_-20px_rgba(156,52,21,0.5)] backdrop-blur-2xl md:hidden"
           >
+            {/* soft autumn glow accents */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-coral/25 blur-3xl"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-16 -left-10 h-48 w-48 rounded-full bg-amber/25 blur-3xl"
+            />
+
             {/* header + close */}
-            <div className="mb-2 flex items-center justify-between">
-              <p className="px-1 font-script text-lg italic text-maple/80">
+            <div className="relative mb-5 flex items-center justify-between">
+              <motion.p
+                animate={{ y: [0, -3, 0], rotate: [0, -1.5, 0] }}
+                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                className="px-1 font-script text-xl italic text-maple/80"
+              >
                 月が綺麗
-              </p>
-              <button
+              </motion.p>
+              <motion.button
                 type="button"
                 onClick={onClose}
                 aria-label="Close menu"
-                className="flex h-10 w-10 items-center justify-center rounded-full text-coral transition active:scale-90"
+                whileHover={{ rotate: 90 }}
+                whileTap={{ scale: 0.82 }}
+                transition={{ type: "spring", stiffness: 420, damping: 22 }}
+                className="grid h-10 w-10 place-items-center rounded-full bg-white/55 text-coral ring-1 ring-maple/15 transition-colors hover:bg-white/85"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M6 6l12 12" />
                   <path d="M18 6L6 18" />
                 </svg>
-              </button>
+              </motion.button>
             </div>
-            {items.map(({ href, label, Icon }) => {
-              const active = isActive(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={onClose}
-                  className={`flex min-h-[48px] items-center gap-3 rounded-2xl px-4 text-base font-semibold transition active:scale-[0.98] ${
-                    active
-                      ? "bg-coral text-white shadow-sm"
-                      : "text-bark hover:bg-white/70"
-                  }`}
+
+            <motion.nav
+              variants={listV}
+              initial="hidden"
+              animate="show"
+              className="relative flex flex-col gap-1.5"
+            >
+              {items.map(({ href, label, Icon }) => {
+                const active = isActive(href);
+                return (
+                  <motion.div
+                    key={href}
+                    variants={rowV}
+                    whileHover={{ x: 5 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <Link
+                      href={href}
+                      onClick={onClose}
+                      className={`group relative flex min-h-[52px] items-center gap-3.5 overflow-hidden rounded-2xl px-3.5 text-base font-semibold transition-colors ${
+                        active ? "text-white" : "text-bark hover:text-coral"
+                      }`}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="drawer-active"
+                          transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                          className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-r from-coral to-maple shadow-[0_12px_30px_-10px_rgba(227,83,54,0.85)]"
+                        />
+                      )}
+                      <span
+                        className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 ${
+                          active ? "bg-white/25 text-white" : "bg-white/55 text-coral ring-1 ring-maple/10"
+                        }`}
+                      >
+                        <Icon />
+                      </span>
+                      {label}
+                      <span
+                        className={`ml-auto text-lg transition-all duration-300 ${
+                          active
+                            ? "translate-x-0 opacity-90"
+                            : "-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"
+                        }`}
+                      >
+                        →
+                      </span>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+
+              {user && (
+                <motion.div
+                  variants={rowV}
+                  whileHover={{ x: 5 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="mt-1"
                 >
-                  <span className={active ? "text-white" : "text-coral"}>
-                    <Icon />
-                  </span>
-                  {label}
-                </Link>
-              );
-            })}
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onSignOut();
+                    }}
+                    className="group flex min-h-[52px] w-full items-center gap-3.5 rounded-2xl px-3.5 text-base font-semibold text-bark/55 transition-colors hover:text-coral"
+                  >
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/50 text-coral ring-1 ring-maple/10 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
+                      <LogOut />
+                    </span>
+                    Log out
+                  </button>
+                </motion.div>
+              )}
+            </motion.nav>
 
-            {user && (
-              <button
-                onClick={() => {
-                  onClose();
-                  onSignOut();
-                }}
-                className="mt-2 flex min-h-[48px] items-center gap-3 rounded-2xl px-4 text-base font-semibold text-bark/60 transition hover:bg-white/70 active:scale-[0.98]"
-              >
-                <span className="text-coral">
-                  <LogOut />
-                </span>
-                Log out
-              </button>
-            )}
-
-            <span className="mt-auto px-2 font-serif text-xs italic text-bark/40">
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="relative mt-auto px-2 font-serif text-xs italic text-bark/45"
+            >
               Frames of Mind · a gift, in autumn words
-            </span>
+            </motion.span>
           </motion.aside>
         </>
       )}

@@ -171,15 +171,15 @@ export default function AboutBuilder({ initial }: { initial: AboutBlock[] }) {
   return (
     <div className="mx-auto max-w-[1500px] px-4 py-8 md:px-8">
       <LeafBurst trigger={burst} />
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <button
           type="button"
           onClick={() => router.push("/about")}
-          className="inline-flex items-center gap-1.5 rounded-full border border-maple/20 bg-white/60 px-4 py-1.5 text-sm font-medium text-bark/70 transition hover:-translate-x-0.5 hover:border-coral hover:text-coral"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-maple/20 bg-white/60 px-4 py-1.5 text-sm font-medium text-bark/70 transition hover:-translate-x-0.5 hover:border-coral hover:text-coral"
         >
-          ← Back to About
+          ← Back
         </button>
-        <span className="text-sm uppercase tracking-[0.25em] text-coral/70">
+        <span className="text-[11px] uppercase tracking-[0.18em] text-coral/70 sm:text-sm sm:tracking-[0.25em]">
           Editing the About page
         </span>
       </div>

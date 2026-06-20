@@ -136,6 +136,16 @@ export default function BlogEditor({ initial }: { initial?: EditorInitial }) {
     }, 850);
   }
 
+  // Cancel → go back to where the user came from; fall back to the post/list
+  // if there's no in-app history (e.g. opened the editor URL directly).
+  function handleCancel() {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(isEdit ? `/blogs/${initial!.id}` : "/blogs");
+    }
+  }
+
   function fail(msg: string) {
     setSaving(false);
     setError(msg);
@@ -293,23 +303,33 @@ export default function BlogEditor({ initial }: { initial?: EditorInitial }) {
         </div>
       </div>
 
-      {/* Sticky action bar */}
-      <div className="sticky bottom-4 z-20 mt-8 flex items-center justify-end gap-3 rounded-2xl bg-white/90 p-3 shadow-lg ring-1 ring-maple/10 backdrop-blur">
-        <button
-          type="button"
-          onClick={() => router.push(isEdit ? `/blogs/${initial!.id}` : "/blogs")}
-          className="rounded-lg px-6 py-3 text-ink/60 transition hover:text-ink"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded-lg bg-coral px-8 py-3 font-medium text-white shadow-sm transition hover:bg-coral-dark hover:shadow-md active:scale-95 disabled:opacity-60"
-        >
-          {saving ? "Saving…" : isEdit ? "Update Blog" : "Publish Blog"}
-        </button>
+      {/* Sticky action bar — matches the Home / About editor pill */}
+      <div className="sticky bottom-5 z-30 mt-8">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 rounded-full border border-maple/15 bg-cream/90 px-3 py-2.5 pl-6 shadow-[0_20px_50px_-20px_rgba(156,52,21,0.6)] backdrop-blur-md">
+          <span className="flex items-center gap-2 text-sm text-bark/70">
+            <span className="text-lg">🍂</span>
+            <span className="hidden font-serif italic sm:inline">
+              {isEdit ? "polishing this post" : "drafting a new post"}
+            </span>
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="rounded-full px-5 py-2.5 text-sm font-semibold uppercase tracking-wider text-bark/60 transition hover:text-bark"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-full bg-coral px-7 py-2.5 text-sm font-semibold uppercase tracking-wider text-white shadow-[var(--shadow-warm)] transition hover:bg-coral-dark active:scale-95 disabled:opacity-60"
+            >
+              {saving ? "Saving…" : isEdit ? "✓ Update Blog" : "✓ Publish Blog"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
