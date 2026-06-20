@@ -278,7 +278,7 @@ function MobileDrawer({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 360, damping: 38 }}
-            className="fixed right-0 top-0 z-[70] flex h-full w-[80%] max-w-xs flex-col gap-2 border-l border-maple/20 bg-gradient-to-b from-cream to-peach p-5 pt-5 shadow-2xl md:hidden"
+            className="fixed right-0 top-0 z-[70] flex h-full w-[80%] max-w-xs flex-col gap-2 border-l border-maple/20 bg-cream/90 p-5 pt-5 shadow-2xl backdrop-blur-2xl md:hidden"
           >
             {/* header + close */}
             <div className="mb-2 flex items-center justify-between">
