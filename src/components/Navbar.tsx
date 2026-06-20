@@ -86,12 +86,30 @@ export default function Navbar() {
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
-  // Close the mobile drawer on navigation + lock body scroll while open.
+  // Close the mobile drawer on navigation.
   useEffect(() => setOpen(false), [pathname]);
+
+  // Lock body scroll while the drawer is open WITHOUT losing scroll position.
+  // (Plain `overflow:hidden` clips page height and snaps the page to the top —
+  // the position-fixed + restore approach freezes exactly where the user is.)
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
+    if (!open) return;
+    const y = window.scrollY;
+    const body = document.body;
+    body.style.position = "fixed";
+    body.style.top = `-${y}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "";
+      body.style.position = "";
+      body.style.top = "";
+      body.style.left = "";
+      body.style.right = "";
+      body.style.width = "";
+      body.style.overflow = "";
+      window.scrollTo(0, y);
     };
   }, [open]);
 
@@ -102,6 +120,7 @@ export default function Navbar() {
   }
 
   return (
+    <>
     <header className="sticky top-0 z-50 w-full border-b border-maple/10 bg-cream/80 shadow-[0_1px_24px_-16px_rgba(156,52,21,0.5)] backdrop-blur-md">
       <nav className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-5 md:px-10">
         {/* Brand */}
@@ -221,18 +240,21 @@ export default function Navbar() {
           </svg>
         </button>
       </nav>
-
-      {/* Mobile drawer */}
-      <MobileDrawer
-        open={open}
-        onClose={() => setOpen(false)}
-        pathname={pathname}
-        isActive={isActive}
-        owner={owner}
-        user={!!user}
-        onSignOut={doSignOut}
-      />
     </header>
+
+    {/* Mobile drawer — rendered OUTSIDE the backdrop-blurred <header> so its
+        fixed positioning is relative to the viewport (not the header) and its
+        own opaque background isn't broken by an ancestor backdrop-filter. */}
+    <MobileDrawer
+      open={open}
+      onClose={() => setOpen(false)}
+      pathname={pathname}
+      isActive={isActive}
+      owner={owner}
+      user={!!user}
+      onSignOut={doSignOut}
+    />
+    </>
   );
 }
 
@@ -278,7 +300,8 @@ function MobileDrawer({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 360, damping: 38 }}
-            className="fixed right-0 top-0 z-[70] flex h-full w-[80%] max-w-xs flex-col gap-2 border-l border-maple/20 bg-cream/90 p-5 pt-5 shadow-2xl backdrop-blur-2xl md:hidden"
+            style={{ backgroundColor: "#fff7f0" }}
+            className="fixed right-0 top-0 z-[70] flex h-full w-[80%] max-w-xs flex-col gap-2 border-l border-maple/20 p-5 pt-5 shadow-2xl md:hidden"
           >
             {/* header + close */}
             <div className="mb-2 flex items-center justify-between">
