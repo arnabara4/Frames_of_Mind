@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { useInstall } from "@/components/pwa/InstallProvider";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -34,13 +35,37 @@ export default function InstallButton() {
 
   return (
     <div ref={ref} className="relative">
-      <button
+      <motion.button
         type="button"
         onClick={onClick}
-        className="inline-flex items-center gap-2 rounded-full border border-coral/40 bg-white/70 px-4 py-2 text-sm font-semibold text-coral shadow-sm backdrop-blur transition hover:bg-coral hover:text-white active:scale-95"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.94 }}
+        transition={{ type: "spring", stiffness: 380, damping: 16 }}
+        className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-coral to-maple px-5 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-warm)] ring-1 ring-white/30"
       >
-        ⬇ Install app
-      </button>
+        {/* shimmer sweep on hover */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -translate-x-[120%] bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[120%]"
+        />
+        <motion.span
+          aria-hidden
+          animate={{ y: [0, 2.5, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          className="relative grid h-5 w-5 place-items-center rounded-full bg-white/25 text-[13px]"
+        >
+          ⬇
+        </motion.span>
+        <span className="relative">Install app</span>
+        <span
+          aria-hidden
+          className="relative -ml-0.5 text-base transition-transform duration-300 group-hover:rotate-[14deg]"
+        >
+          🍁
+        </span>
+      </motion.button>
       {hint && !canInstall && (
         <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-maple/15 bg-cream/95 p-3 text-sm leading-relaxed text-bark/75 shadow-lg backdrop-blur">
           {isIOS ? (

@@ -8,6 +8,7 @@ import LottieBackground from "@/components/LottieBackground";
 import DeferUntilIdle from "@/components/DeferUntilIdle";
 import { InstallProvider } from "@/components/pwa/InstallProvider";
 import InstallPopup from "@/components/pwa/InstallPopup";
+import PullToRefresh from "@/components/PullToRefresh";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
 
 export const viewport: Viewport = {
@@ -83,6 +84,7 @@ export default function RootLayout({
       className={`${fraunces.variable} ${lora.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        <PullToRefresh />
         <DeferUntilIdle>
           <LottieBackground />
         </DeferUntilIdle>
