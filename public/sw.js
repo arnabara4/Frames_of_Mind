@@ -2,7 +2,7 @@
    Network-first for navigations (fresh content, offline fallback to cache),
    stale-while-revalidate for static assets. Never caches /api or cross-origin
    (Supabase / auth) requests. */
-const CACHE = "fom-v2";
+const CACHE = "fom-v3";
 const OFFLINE_URL = "/offline";
 
 self.addEventListener("install", (e) => {
@@ -58,7 +58,8 @@ self.addEventListener("fetch", (e) => {
     url.pathname.startsWith("/_next/") ||
     url.pathname.startsWith("/icons/") ||
     url.pathname.startsWith("/lottifiles/") ||
-    /\.(png|jpe?g|svg|webp|avif|woff2?|ico|css|js)$/.test(url.pathname);
+    url.pathname.startsWith("/dotlottie/") ||
+    /\.(png|jpe?g|svg|webp|avif|woff2?|ico|css|js|wasm)$/.test(url.pathname);
 
   if (isStatic) {
     e.respondWith(

@@ -94,6 +94,7 @@ export default function Navbar() {
   // the position-fixed + restore approach freezes exactly where the user is.)
   useEffect(() => {
     if (!open) return;
+    window.dispatchEvent(new CustomEvent("fom:overlay", { detail: { open: true } }));
     const y = window.scrollY;
     const body = document.body;
     body.style.position = "fixed";
@@ -110,6 +111,7 @@ export default function Navbar() {
       body.style.width = "";
       body.style.overflow = "";
       window.scrollTo(0, y);
+      window.dispatchEvent(new CustomEvent("fom:overlay", { detail: { open: false } }));
     };
   }, [open]);
 
@@ -274,6 +276,20 @@ function MobileDrawer({
   user: boolean;
   onSignOut: () => void;
 }) {
+  // Defer the (expensive) backdrop-blur until the slide settles, so the panel
+  // never re-blurs the page mid-animation — then the glass focuses in at rest.
+  const [settled, setSettled] = useState(false);
+
+  // Engage the blur only after the open slide finishes; drop it the moment we
+  // start closing — so the panel never does backdrop work while it moves.
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => setSettled(true), 460);
+    return () => {
+      clearTimeout(t);
+      setSettled(false);
+    };
+  }, [open]);
   const items = [
     ...LINKS,
     ...(owner
@@ -306,6 +322,7 @@ function MobileDrawer({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             onClick={onClose}
             className="fixed inset-0 z-[60] bg-bark/50 backdrop-blur-sm md:hidden"
           />
@@ -313,9 +330,14 @@ function MobileDrawer({
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 360, damping: 38 }}
-            className="fixed right-0 top-0 z-[70] flex h-full w-[82%] max-w-xs flex-col overflow-hidden border-l border-white/40 bg-gradient-to-br from-cream/80 via-cream/65 to-peach/55 p-5 pt-5 shadow-[-24px_0_60px_-20px_rgba(156,52,21,0.5)] backdrop-blur-2xl md:hidden"
+            transition={{ type: "tween", duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+            className={`fixed right-0 top-0 z-[70] flex h-full w-[82%] max-w-xs flex-col overflow-hidden border-l border-white/40 bg-gradient-to-br from-cream/75 via-cream/65 to-peach/50 p-5 pt-5 shadow-[-24px_0_60px_-20px_rgba(156,52,21,0.5)] transform-gpu will-change-transform ${settled ? "backdrop-blur-xl" : ""} md:hidden`}
           >
+            {/* warm accent seam along the top edge */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-coral via-maple to-gold"
+            />
             {/* soft autumn glow accents */}
             <div
               aria-hidden
@@ -325,16 +347,34 @@ function MobileDrawer({
               aria-hidden
               className="pointer-events-none absolute -bottom-16 -left-10 h-48 w-48 rounded-full bg-amber/25 blur-3xl"
             />
+            {/* faint oversized autumn kanji watermark fills the lower void */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -bottom-4 right-2 select-none font-script text-[9rem] leading-none text-coral/[0.05]"
+            >
+              秋
+            </span>
 
-            {/* header + close */}
-            <div className="relative mb-5 flex items-center justify-between">
-              <motion.p
-                animate={{ y: [0, -3, 0], rotate: [0, -1.5, 0] }}
-                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-                className="px-1 font-script text-xl italic text-maple/80"
-              >
-                月が綺麗
-              </motion.p>
+            {/* header — calligraphy + a vermilion hanko seal (落款) */}
+            <div className="relative mb-6 flex items-start justify-between">
+              <div className="flex flex-col gap-1">
+                <motion.p
+                  animate={{ y: [0, -3, 0], rotate: [0, -1.5, 0] }}
+                  transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                  className="flex items-center gap-1.5 font-script text-2xl italic text-maple/85"
+                >
+                  <span aria-hidden className="text-base not-italic text-coral">
+                    ❦
+                  </span>
+                  月が綺麗
+                </motion.p>
+                <span
+                  aria-hidden
+                  className="mt-1.5 grid h-8 w-8 -rotate-6 place-items-center rounded-[6px] bg-coral-dark font-display text-base font-bold leading-none text-cream shadow-[0_4px_12px_-4px_rgba(156,52,21,0.65)] ring-2 ring-inset ring-cream/40"
+                >
+                  月
+                </span>
+              </div>
               <motion.button
                 type="button"
                 onClick={onClose}
@@ -342,7 +382,7 @@ function MobileDrawer({
                 whileHover={{ rotate: 90 }}
                 whileTap={{ scale: 0.82 }}
                 transition={{ type: "spring", stiffness: 420, damping: 22 }}
-                className="grid h-10 w-10 place-items-center rounded-full bg-white/55 text-coral ring-1 ring-maple/15 transition-colors hover:bg-white/85"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/60 text-coral ring-1 ring-maple/15 shadow-sm transition-colors hover:bg-white"
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M6 6l12 12" />
@@ -350,6 +390,10 @@ function MobileDrawer({
                 </svg>
               </motion.button>
             </div>
+
+            <p className="relative mb-2.5 ml-1.5 font-serif text-[11px] font-semibold uppercase tracking-[0.3em] text-maple/55">
+              Explore
+            </p>
 
             <motion.nav
               variants={listV}
@@ -369,8 +413,10 @@ function MobileDrawer({
                     <Link
                       href={href}
                       onClick={onClose}
-                      className={`group relative flex min-h-[52px] items-center gap-3.5 overflow-hidden rounded-2xl px-3.5 text-base font-semibold transition-colors ${
-                        active ? "text-white" : "text-bark hover:text-coral"
+                      className={`group relative flex min-h-[52px] items-center gap-3.5 overflow-hidden rounded-2xl px-3.5 text-base font-semibold transition ${
+                        active
+                          ? "text-white"
+                          : "text-bark hover:bg-white/45 hover:text-coral hover:ring-1 hover:ring-maple/10"
                       }`}
                     >
                       {active && (
@@ -403,6 +449,12 @@ function MobileDrawer({
               })}
 
               {user && (
+                <div
+                  aria-hidden
+                  className="my-1.5 ml-1.5 mr-2 h-px bg-gradient-to-r from-maple/30 via-maple/12 to-transparent"
+                />
+              )}
+              {user && (
                 <motion.div
                   variants={rowV}
                   whileHover={{ x: 5 }}
@@ -425,14 +477,31 @@ function MobileDrawer({
               )}
             </motion.nav>
 
-            <motion.span
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="relative mt-auto px-2 font-serif text-xs italic text-bark/45"
+              className="relative mt-auto flex flex-col gap-2 px-1.5 pb-1"
             >
-              Frames of Mind · a gift, in autumn words
-            </motion.span>
+              {/* seigaiha (青海波) — traditional Japanese wave crests */}
+              <div
+                aria-hidden
+                className="h-5 w-full opacity-70"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle at 50% 100%, transparent 0 30%, rgba(227,83,54,0.30) 30% 37%, transparent 37% 50%, rgba(227,83,54,0.30) 50% 57%, transparent 57% 70%, rgba(227,83,54,0.30) 70% 77%, transparent 77%), radial-gradient(circle at 50% 100%, transparent 0 30%, rgba(182,67,42,0.24) 30% 37%, transparent 37% 50%, rgba(182,67,42,0.24) 50% 57%, transparent 57% 70%, rgba(182,67,42,0.24) 70% 77%, transparent 77%)",
+                  backgroundSize: "40px 20px",
+                  backgroundPosition: "0 0, 20px 10px",
+                  backgroundRepeat: "repeat",
+                }}
+              />
+              <p className="text-center font-display text-base font-semibold text-coral">
+                Frames of Mind
+              </p>
+              <p className="text-center font-serif text-xs italic text-bark/45">
+                a gift, in autumn words
+              </p>
+            </motion.div>
           </motion.aside>
         </>
       )}

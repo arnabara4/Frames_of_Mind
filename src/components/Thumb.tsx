@@ -3,9 +3,26 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-// Tiny warm blur shown while the real image streams in (prevents flashes).
-const BLUR =
-  "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='10'%3E%3Crect width='8' height='10' fill='%23f6c3b0'/%3E%3C/svg%3E";
+// Cute per-seed warm blur shown while the real image streams in — a soft autumn
+// glow that next/image scales up + blurs, so the photo melts into focus.
+const BLUR_SETS = [
+  ["e35336", "f4a896", "efb04a"],
+  ["d98324", "efb04a", "ffccc1"],
+  ["b6432a", "e35336", "f4a896"],
+  ["efb04a", "ffccc1", "f4a896"],
+];
+function blurFor(seed: number): string {
+  const [a, b, c] = BLUR_SETS[seed % BLUR_SETS.length];
+  const svg =
+    `%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='15'%3E` +
+    `%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='28%25' r='95%25'%3E` +
+    `%3Cstop offset='0' stop-color='%23${a}'/%3E` +
+    `%3Cstop offset='0.6' stop-color='%23${b}'/%3E` +
+    `%3Cstop offset='1' stop-color='%23${c}'/%3E` +
+    `%3C/radialGradient%3E%3C/defs%3E` +
+    `%3Crect width='12' height='15' fill='url(%23g)'/%3E%3C/svg%3E`;
+  return `data:image/svg+xml;charset=utf-8,${svg}`;
+}
 
 /**
  * Image with a graceful autumn placeholder and an optional "framed" treatment.
@@ -90,7 +107,7 @@ export default function Thumb({
             sizes={sizes}
             priority={priority}
             placeholder="blur"
-            blurDataURL={BLUR}
+            blurDataURL={blurFor(seed)}
             onError={() => setFailed(true)}
             className="object-cover transition duration-700 hover:scale-[1.04]"
           />

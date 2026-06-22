@@ -65,6 +65,19 @@ export default function LottieBackground() {
     };
   }, [reduce, lowEnd]);
 
+  // Pause the canvas while a full-screen overlay (mobile drawer) is open, so the
+  // slide stays buttery; resume when it closes (unless the tab is hidden).
+  useEffect(() => {
+    if (reduce || lowEnd) return;
+    const onOverlay = (e: Event) => {
+      const isOpen = (e as CustomEvent<{ open: boolean }>).detail?.open;
+      if (isOpen) dot.current?.pause();
+      else if (!document.hidden) dot.current?.play();
+    };
+    window.addEventListener("fom:overlay", onOverlay);
+    return () => window.removeEventListener("fom:overlay", onOverlay);
+  }, [reduce, lowEnd]);
+
   if (reduce || lowEnd || !visible) return null;
 
   return (
@@ -76,6 +89,7 @@ export default function LottieBackground() {
         src="/lottifiles/autumn-fall.lottie"
         loop
         autoplay
+        layout={{ fit: "cover", align: [0.5, 0.5] }}
         renderConfig={{
           devicePixelRatio: 1,
           autoResize: true,
@@ -85,7 +99,7 @@ export default function LottieBackground() {
           dot.current = d;
         }}
         className="h-full w-full opacity-[0.16] md:opacity-[0.26]"
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        style={{ width: "100%", height: "100%" }}
       />
     </div>
   );

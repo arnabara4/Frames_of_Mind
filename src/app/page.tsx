@@ -86,6 +86,7 @@ export default async function HomePage() {
             <div className="relative mx-auto h-[420px] w-full max-w-[520px] md:h-[560px]">
               <FloatFrame
                 seed={0}
+                priority
                 ornate
                 src={c.frames[0].image_url}
                 caption={c.frames[0].caption}
@@ -97,6 +98,7 @@ export default async function HomePage() {
               />
               <FloatFrame
                 seed={2}
+                priority
                 ornate
                 src={c.frames[1].image_url}
                 caption={c.frames[1].caption}

@@ -41,6 +41,10 @@ const nextConfig: NextConfig = {
     // Local dev networks with NAT64/DNS64 make the optimizer reject remote
     // hosts as "private IP" — skip optimization in dev, keep it in prod.
     unoptimized: !isProd,
+    // Keep optimized derivatives cached ~31 days so repeat loads skip re-transcoding.
+    minimumCacheTTL: 2678400,
+    // AVIF first (smallest payloads), then WebP — less bandwidth per request.
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       { protocol: "https", hostname: supabaseHost },
       { protocol: "https", hostname: "loremflickr.com" },
@@ -53,7 +57,24 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Ambient Lottie + its WASM runtime are static & content-stable — cache hard
+      // (browser + CDN) so repeat visits never re-download or re-decode them.
+      {
+        source: "/dotlottie/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        source: "/lottifiles/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=2592000, stale-while-revalidate=86400",
+          },
+        ],
+      },
+    ];
   },
 };
 
