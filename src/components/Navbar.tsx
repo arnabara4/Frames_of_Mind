@@ -123,7 +123,7 @@ export default function Navbar() {
 
   return (
     <>
-    <header className="sticky top-0 z-50 w-full border-b border-maple/10 bg-cream/80 shadow-[0_1px_24px_-16px_rgba(156,52,21,0.5)] backdrop-blur-md">
+    <header style={{ viewTransitionName: "site-header" } as React.CSSProperties} className="sticky top-0 z-50 w-full border-b border-maple/10 bg-cream/80 shadow-[0_1px_24px_-16px_rgba(156,52,21,0.5)] backdrop-blur-md">
       <nav className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-5 md:px-10">
         {/* Brand */}
         <Link href="/" className="group flex items-center gap-2.5">

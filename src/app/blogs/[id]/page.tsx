@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { cache, ViewTransition } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -10,7 +10,6 @@ import SectionRenderer from "@/components/SectionRenderer";
 import BlogOwnerActions from "@/components/BlogOwnerActions";
 import Thumb from "@/components/Thumb";
 import CoverFallback from "@/components/CoverFallback";
-import { Reveal } from "@/components/motion";
 import Comments from "@/components/Comments";
 
 // Public, cacheable read — deduped between generateMetadata and the page.
@@ -102,6 +101,7 @@ export default async function BlogDetailPage({
       <div className="flex items-center justify-between">
         <Link
           href="/blogs"
+          transitionTypes={["nav-back"]}
           className="text-sm text-coral transition hover:-translate-x-0.5 hover:underline"
         >
           ← Back to blogs
@@ -109,19 +109,21 @@ export default async function BlogDetailPage({
         <BlogOwnerActions blogId={post.id} />
       </div>
 
-      {/* Cover hero — flows straight into the meta + title below */}
-      <Reveal className="mt-6">
+      {/* Cover hero — morphs from the card you tapped (shared ViewTransition name) */}
+      <div className="mt-6">
         <div className="relative h-64 overflow-hidden rounded-3xl md:h-96">
           {post.cover_image ? (
-            <Thumb
-              src={post.cover_image}
-              alt={post.title}
-              seed={0}
-              rounded="rounded-3xl"
-              className="h-full w-full"
-              priority
-              sizes="(max-width: 1000px) 100vw, 1000px"
-            />
+            <ViewTransition name={`blog-${post.id}`} share="morph">
+              <Thumb
+                src={post.cover_image}
+                alt={post.title}
+                seed={0}
+                rounded="rounded-3xl"
+                className="h-full w-full"
+                priority
+                sizes="(max-width: 1000px) 100vw, 1000px"
+              />
+            </ViewTransition>
           ) : (
             <CoverFallback count={16} />
           )}
@@ -135,7 +137,7 @@ export default async function BlogDetailPage({
             </h1>
           </div>
         </div>
-      </Reveal>
+      </div>
 
       {/* Article body */}
       <div className="mt-10 flex flex-col gap-8">

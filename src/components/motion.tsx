@@ -85,6 +85,7 @@ export function StaggerItem({
       className={className}
       variants={staggerItem}
       whileHover={reduce || !lift ? undefined : { y: -6, scale: 1.015 }}
+      whileTap={reduce ? undefined : { scale: 0.96 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
     >
       {children}

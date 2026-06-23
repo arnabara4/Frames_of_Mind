@@ -1,23 +1,33 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
+import { ViewTransition } from "react";
 
 /**
- * Wraps every route so navigations cross-fade in. A `template` re-mounts on each
- * navigation (unlike `layout`), giving a seamless entry transition. We animate
- * opacity only — never transform — so it can't create a containing block that
- * would break the sticky editor action bars or navbar.
+ * Wraps every route in React's <ViewTransition> so page-to-page navigations
+ * animate. The template re-mounts on every route change, giving React the
+ * old/new pair it needs to diff.
+ *
+ * Direction is communicated through transitionTypes on <Link>:
+ *   nav-forward — blog card → detail (content rises in from the right)
+ *   nav-back    — "← Back to blogs" (content comes in from the left)
+ *   (untagged)  — cross-fade with a gentle upward rise
+ *
+ * Reduced motion is handled entirely in CSS so this stays a pure server
+ * component with no client-side hooks.
  */
 export default function Template({ children }: { children: React.ReactNode }) {
-  const reduce = useReducedMotion();
-  if (reduce) return <>{children}</>;
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+    <ViewTransition
+      enter={{
+        "nav-forward": "enter-fwd",
+        "nav-back":    "enter-back",
+        default:       "enter-page",
+      }}
+      exit={{
+        "nav-forward": "exit-fwd",
+        "nav-back":    "exit-back",
+        default:       "exit-page",
+      }}
     >
       {children}
-    </motion.div>
+    </ViewTransition>
   );
 }

@@ -52,7 +52,8 @@ export default function Thumb({
   sizes?: string;
 }) {
   const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [src]);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => { setFailed(false); setLoaded(false); }, [src]);
 
   const frame = framed
     ? "p-1.5 bg-gradient-to-br from-white to-peach/40 shadow-[var(--shadow-warm)] ring-1 ring-maple/15"
@@ -72,7 +73,11 @@ export default function Thumb({
   // page regardless of container width.
   if (natural) {
     return (
-      <div className={`overflow-hidden ${rounded} ${frame} ${className}`}>
+      <div
+        className={`relative overflow-hidden ${rounded} ${frame} ${className} ${
+          showImg && !loaded ? "shimmer-warm min-h-[180px]" : ""
+        }`}
+      >
         {showImg ? (
           <Image
             src={src as string}
@@ -83,8 +88,9 @@ export default function Thumb({
             priority={priority}
             placeholder="blur"
             blurDataURL={blurFor(seed)}
+            onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}
-            className={`block ${rounded}`}
+            className={`block ${rounded} transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
             style={{ width: "100%", height: "auto" }}
           />
         ) : (
@@ -105,17 +111,23 @@ export default function Thumb({
     <div className={`overflow-hidden ${rounded} ${frame} ${className}`}>
       <div className={`relative h-full w-full overflow-hidden ${rounded}`}>
         {showImg ? (
-          <Image
-            src={src as string}
-            alt={alt ?? ""}
-            fill
-            sizes={sizes}
-            priority={priority}
-            placeholder="blur"
-            blurDataURL={blurFor(seed)}
-            onError={() => setFailed(true)}
-            className="object-cover transition duration-700 hover:scale-[1.04]"
-          />
+          <>
+            <Image
+              src={src as string}
+              alt={alt ?? ""}
+              fill
+              sizes={sizes}
+              priority={priority}
+              placeholder="blur"
+              blurDataURL={blurFor(seed)}
+              onLoad={() => setLoaded(true)}
+              onError={() => setFailed(true)}
+              className="object-cover transition duration-700 hover:scale-[1.04]"
+            />
+            {!loaded && (
+              <span aria-hidden className="shimmer-warm pointer-events-none absolute inset-0" />
+            )}
+          </>
         ) : (
           <div
             className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${g}`}

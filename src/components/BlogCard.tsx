@@ -1,3 +1,4 @@
+import { ViewTransition } from "react";
 import Link from "next/link";
 import type { Blog } from "@/lib/types";
 import { formatDate } from "@/lib/types";
@@ -26,7 +27,8 @@ export function BlogCard({ blog, seed = 0 }: { blog: Blog; seed?: number }) {
   return (
     <Link
       href={`/blogs/${blog.id}`}
-      className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-maple/15 bg-gradient-to-br from-white via-cream/50 to-peach/30 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-coral/30 hover:shadow-[var(--shadow-warm)]"
+      transitionTypes={["nav-forward"]}
+      className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-maple/15 bg-gradient-to-br from-white via-cream/50 to-peach/30 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-coral/30 hover:shadow-[var(--shadow-warm)] active:scale-[0.98] active:brightness-95 active:shadow-sm"
     >
       <span
         aria-hidden
@@ -34,7 +36,10 @@ export function BlogCard({ blog, seed = 0 }: { blog: Blog; seed?: number }) {
       >
         🍁
       </span>
-      <Thumb src={blog.cover_image} alt={blog.title} seed={seed} framed className="h-56 w-full" />
+      {/* ViewTransition name matches the detail hero — browser morphs between them */}
+      <ViewTransition name={`blog-${blog.id}`} share="morph">
+        <Thumb src={blog.cover_image} alt={blog.title} seed={seed} framed className="h-56 w-full" />
+      </ViewTransition>
       <div className="mt-4">
         <Meta blog={blog} />
       </div>
@@ -58,14 +63,17 @@ export function BlogRow({ blog, seed = 0 }: { blog: Blog; seed?: number }) {
   return (
     <Link
       href={`/blogs/${blog.id}`}
-      className="group relative grid grid-cols-[130px_1fr] items-center gap-5 overflow-hidden rounded-3xl border border-maple/15 bg-gradient-to-br from-white via-cream/45 to-peach/25 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-coral/30 hover:shadow-[var(--shadow-warm)] md:grid-cols-[280px_1fr] md:gap-8 md:p-5"
+      transitionTypes={["nav-forward"]}
+      className="group relative grid grid-cols-[130px_1fr] items-center gap-5 overflow-hidden rounded-3xl border border-maple/15 bg-gradient-to-br from-white via-cream/45 to-peach/25 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-coral/30 hover:shadow-[var(--shadow-warm)] active:scale-[0.98] active:brightness-95 md:grid-cols-[280px_1fr] md:gap-8 md:p-5"
     >
       {/* coral accent rail */}
       <span
         aria-hidden
         className="absolute left-0 top-0 h-full w-1 origin-top scale-y-0 bg-gradient-to-b from-coral to-maple transition-transform duration-300 group-hover:scale-y-100"
       />
-      <Thumb src={blog.cover_image} alt={blog.title} seed={seed} framed className="h-28 w-full md:h-44" />
+      <ViewTransition name={`blog-${blog.id}`} share="morph">
+        <Thumb src={blog.cover_image} alt={blog.title} seed={seed} framed className="h-28 w-full md:h-44" />
+      </ViewTransition>
       <div className="min-w-0">
         <Meta blog={blog} />
         <h3 className="mt-2 font-display text-xl font-bold text-ink transition-colors group-hover:text-coral md:text-3xl">

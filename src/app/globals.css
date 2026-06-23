@@ -136,3 +136,113 @@ body {
 .input-underline:focus {
   border-color: var(--color-coral);
 }
+
+/* ───────────────────────── View Transitions ─────────────────────────
+ * Page navigations animate via React's <ViewTransition> (see template.tsx).
+ * We animate opacity + a small translate on the snapshot pseudo-elements
+ * (GPU-composited, never touches real layout → zero jank). The header is
+ * anchored so only the content moves. */
+
+:root {
+  --vt-exit: 170ms;
+  --vt-enter: 260ms;
+}
+
+/* Default page change: gentle cross-fade + rise (untagged navigations) */
+::view-transition-old(.exit-page) {
+  animation: var(--vt-exit) ease-in both vt-fade reverse;
+}
+::view-transition-new(.enter-page) {
+  animation: var(--vt-enter) ease-out var(--vt-exit) both vt-fade,
+    var(--vt-enter) ease-out var(--vt-exit) both vt-rise;
+}
+
+/* Forward (card → detail): old slides left, new rises in from the right */
+::view-transition-old(.exit-fwd) {
+  --vt-slide: -48px;
+  animation: var(--vt-exit) ease-in both vt-fade reverse,
+    360ms cubic-bezier(0.22, 1, 0.36, 1) both vt-slide reverse;
+}
+::view-transition-new(.enter-fwd) {
+  --vt-slide: 48px;
+  animation: var(--vt-enter) ease-out var(--vt-exit) both vt-fade,
+    360ms cubic-bezier(0.22, 1, 0.36, 1) both vt-slide;
+}
+
+/* Back (detail → list): mirror of forward */
+::view-transition-old(.exit-back) {
+  --vt-slide: 48px;
+  animation: var(--vt-exit) ease-in both vt-fade reverse,
+    360ms cubic-bezier(0.22, 1, 0.36, 1) both vt-slide reverse;
+}
+::view-transition-new(.enter-back) {
+  --vt-slide: -48px;
+  animation: var(--vt-enter) ease-out var(--vt-exit) both vt-fade,
+    360ms cubic-bezier(0.22, 1, 0.36, 1) both vt-slide;
+}
+
+/* Shared-element morph (blog cover): soften interpolation with a blur mid-flight */
+::view-transition-group(.morph) {
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-image-pair(.morph) {
+  animation-name: vt-morph-blur;
+}
+
+/* Anchor the site header — it must not slide while content does */
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+@keyframes vt-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes vt-rise {
+  from { transform: translateY(12px); }
+  to   { transform: translateY(0); }
+}
+@keyframes vt-slide {
+  from { translate: var(--vt-slide); }
+  to   { translate: 0; }
+}
+@keyframes vt-morph-blur {
+  40% { filter: blur(2.5px); }
+}
+
+/* Reduced motion: swap instantly (browser default), no positional movement */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* ───────────────────────── Image shimmer ─────────────────────────────
+ * A soft warm sweep shown over an image while it streams in (Thumb). */
+.shimmer-warm {
+  background:
+    linear-gradient(
+      100deg,
+      rgba(255, 248, 241, 0) 30%,
+      rgba(255, 248, 241, 0.55) 50%,
+      rgba(255, 248, 241, 0) 70%
+    ),
+    linear-gradient(135deg, var(--color-peach), var(--color-salmon));
+  background-size: 200% 100%, 100% 100%;
+  animation: shimmer-sweep 1.4s ease-in-out infinite;
+}
+@keyframes shimmer-sweep {
+  from { background-position: 180% 0, 0 0; }
+  to   { background-position: -80% 0, 0 0; }
+}
