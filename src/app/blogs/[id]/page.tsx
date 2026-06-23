@@ -11,6 +11,7 @@ import BlogOwnerActions from "@/components/BlogOwnerActions";
 import Thumb from "@/components/Thumb";
 import CoverFallback from "@/components/CoverFallback";
 import { Reveal } from "@/components/motion";
+import Comments from "@/components/Comments";
 
 // Public, cacheable read — deduped between generateMetadata and the page.
 const getPost = cache(async (id: string) => {
@@ -149,6 +150,7 @@ export default async function BlogDetailPage({
         )}
       </div>
 
+      <Comments blogId={post.id} />
       <div className="mt-16 flex justify-center">
         <Link
           href="/blogs"

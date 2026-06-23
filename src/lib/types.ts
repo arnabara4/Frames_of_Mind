@@ -89,6 +89,7 @@ export interface Blog {
   read_time: string | null;
   author_id: string | null;
   created_at: string;
+  comment_count?: number;
 }
 
 export interface BlogWithSections extends Blog {
@@ -105,4 +106,37 @@ export function formatDate(iso: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+export interface Comment {
+  id: string;
+  blog_id: string;
+  parent_id: string | null;
+  author_name: string;
+  body: string;
+  created_at: string;
+}
+
+/** Relative "time ago" label, YouTube-style (e.g. "3 hours ago"). */
+export function timeAgo(iso: string): string {
+  const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 30) return "just now";
+  const steps: [number, string][] = [
+    [60, "second"],
+    [3600, "minute"],
+    [86400, "hour"],
+    [604800, "day"],
+    [2629800, "week"],
+    [31557600, "month"],
+    [Number.POSITIVE_INFINITY, "year"],
+  ];
+  let prev = 1;
+  for (const [limit, unit] of steps) {
+    if (s < limit) {
+      const v = Math.floor(s / prev);
+      return `${v} ${unit}${v === 1 ? "" : "s"} ago`;
+    }
+    prev = limit;
+  }
+  return "just now";
 }

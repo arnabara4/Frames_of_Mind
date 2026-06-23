@@ -74,13 +74,18 @@ export default function Thumb({
     return (
       <div className={`overflow-hidden ${rounded} ${frame} ${className}`}>
         {showImg ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={src as string}
             alt={alt ?? ""}
-            loading={priority ? "eager" : "lazy"}
+            width={0}
+            height={0}
+            sizes={sizes}
+            priority={priority}
+            placeholder="blur"
+            blurDataURL={blurFor(seed)}
             onError={() => setFailed(true)}
-            className={`block h-auto w-full ${rounded}`}
+            className={`block ${rounded}`}
+            style={{ width: "100%", height: "auto" }}
           />
         ) : (
           <div

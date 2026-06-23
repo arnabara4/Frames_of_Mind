@@ -22,7 +22,20 @@ export default async function HomePage() {
     supabase.from("home_content").select("data").eq("key", "home").maybeSingle(),
   ]);
 
-  const blogs = (data ?? []) as Blog[];
+  const baseBlogs = (data ?? []) as Blog[];
+  const counts = new Map<string, number>();
+  if (baseBlogs.length) {
+    const { data: cRows } = await supabase
+      .from("comments")
+      .select("blog_id")
+      .in("blog_id", baseBlogs.map((b) => b.id));
+    for (const r of (cRows ?? []) as { blog_id: string }[])
+      counts.set(r.blog_id, (counts.get(r.blog_id) ?? 0) + 1);
+  }
+  const blogs: Blog[] = baseBlogs.map((b) => ({
+    ...b,
+    comment_count: counts.get(b.id) ?? 0,
+  }));
   const c = mergeHome(homeRow?.data);
 
   return (

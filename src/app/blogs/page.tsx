@@ -11,5 +11,19 @@ export default async function BlogsPage() {
     .select("*")
     .order("created_at", { ascending: false });
 
-  return <BlogsExplorer blogs={(data ?? []) as Blog[]} />;
+  const baseBlogs = (data ?? []) as Blog[];
+  const counts = new Map<string, number>();
+  if (baseBlogs.length) {
+    const { data: cRows } = await supabase
+      .from("comments")
+      .select("blog_id")
+      .in("blog_id", baseBlogs.map((b) => b.id));
+    for (const r of (cRows ?? []) as { blog_id: string }[])
+      counts.set(r.blog_id, (counts.get(r.blog_id) ?? 0) + 1);
+  }
+  const blogs: Blog[] = baseBlogs.map((b) => ({
+    ...b,
+    comment_count: counts.get(b.id) ?? 0,
+  }));
+  return <BlogsExplorer blogs={blogs} />;
 }

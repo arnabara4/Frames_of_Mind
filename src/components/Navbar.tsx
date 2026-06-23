@@ -276,17 +276,16 @@ function MobileDrawer({
   user: boolean;
   onSignOut: () => void;
 }) {
-  // Defer the (expensive) backdrop-blur until the slide settles, so the panel
-  // never re-blurs the page mid-animation — then the glass focuses in at rest.
+  // The frosted blur ramps in lock-step with the open slide (CSS transition on
+  // backdrop-filter, below) so the glass is fully frosted exactly as the panel
+  // arrives — no jarring two-stage "blur jump" after it settles. Blur grows from
+  // 0 as the panel decelerates, so the heavy work lands while it's near-still.
   const [settled, setSettled] = useState(false);
-
-  // Engage the blur only after the open slide finishes; drop it the moment we
-  // start closing — so the panel never does backdrop work while it moves.
   useEffect(() => {
     if (!open) return;
-    const t = setTimeout(() => setSettled(true), 460);
+    const id = requestAnimationFrame(() => setSettled(true));
     return () => {
-      clearTimeout(t);
+      cancelAnimationFrame(id);
       setSettled(false);
     };
   }, [open]);
@@ -331,7 +330,7 @@ function MobileDrawer({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-            className={`fixed right-0 top-0 z-[70] flex h-full w-[82%] max-w-xs flex-col overflow-hidden border-l border-white/40 bg-gradient-to-br from-cream/75 via-cream/65 to-peach/50 p-5 pt-5 shadow-[-24px_0_60px_-20px_rgba(156,52,21,0.5)] transform-gpu will-change-transform ${settled ? "backdrop-blur-xl" : ""} md:hidden`}
+            className={`fixed right-0 top-0 z-[70] flex h-full w-[82%] max-w-xs flex-col overflow-hidden border-l border-white/40 bg-gradient-to-br from-cream/75 via-cream/65 to-peach/50 p-5 pt-5 shadow-[-24px_0_60px_-20px_rgba(156,52,21,0.5)] transform-gpu will-change-transform transition-[backdrop-filter] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${settled ? "backdrop-blur-xl" : "backdrop-blur-none"} md:hidden`}
           >
             {/* warm accent seam along the top edge */}
             <div

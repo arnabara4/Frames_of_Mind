@@ -12,6 +12,11 @@ function Meta({ blog }: { blog: Blog }) {
       <span className="inline-flex items-center gap-1 text-xs text-bark/55">
         🍂 {blog.read_time ?? "2 min read"}
       </span>
+      {typeof blog.comment_count === "number" && (
+        <span className="inline-flex items-center gap-1 text-xs text-bark/55">
+          💬 {blog.comment_count}
+        </span>
+      )}
     </div>
   );
 }
