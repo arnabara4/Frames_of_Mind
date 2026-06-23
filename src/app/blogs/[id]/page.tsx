@@ -36,6 +36,16 @@ const getPost = cache(async (id: string) => {
 // from the editor keeps it instantly fresh on edits).
 export const revalidate = 60;
 
+// Prerender every post at build so detail routes are static + fully prefetched
+// by <Link> — card → detail navigation is then instant and the View Transition
+// never waits on the server. New posts (not in this list) render on-demand the
+// first time, then cache. This is the key to lag-free, seamless transitions.
+export async function generateStaticParams() {
+  const supabase = createPublicClient();
+  const { data } = await supabase.from("blogs").select("id");
+  return ((data ?? []) as { id: string }[]).map((b) => ({ id: b.id }));
+}
+
 export async function generateMetadata({
   params,
 }: {

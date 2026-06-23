@@ -53,7 +53,22 @@ export default function Thumb({
 }) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  useEffect(() => { setFailed(false); setLoaded(false); }, [src]);
+  const [mounted, setMounted] = useState(false);
+  const [trackedSrc, setTrackedSrc] = useState(src);
+
+  // Reset load/fail state on src change via the derived-state-during-render
+  // pattern (NOT an effect): a [src] effect ran AFTER next/image's onLoad —
+  // which fires during commit for cached images — and clobbered `loaded`
+  // back to false, leaving the shimmer stuck on already-loaded images.
+  if (src !== trackedSrc) {
+    setTrackedSrc(src);
+    setLoaded(false);
+    setFailed(false);
+  }
+
+  // Gate the shimmer on mount so SSR and the first client render match — no
+  // hydration mismatch even when next/image fires onLoad during hydration.
+  useEffect(() => setMounted(true), []);
 
   const frame = framed
     ? "p-1.5 bg-gradient-to-br from-white to-peach/40 shadow-[var(--shadow-warm)] ring-1 ring-maple/15"
@@ -67,6 +82,7 @@ export default function Thumb({
   ];
   const g = gradients[seed % gradients.length];
   const showImg = !!src && !failed;
+  const showShimmer = mounted && showImg && !loaded;
 
   // Natural mode: image keeps its own aspect (no crop, fits the frame, full
   // quality). Used by the About page so the live preview matches the published
@@ -75,7 +91,7 @@ export default function Thumb({
     return (
       <div
         className={`relative overflow-hidden ${rounded} ${frame} ${className} ${
-          showImg && !loaded ? "shimmer-warm min-h-[180px]" : ""
+          showShimmer ? "shimmer-warm min-h-[180px]" : ""
         }`}
       >
         {showImg ? (
@@ -90,7 +106,7 @@ export default function Thumb({
             blurDataURL={blurFor(seed)}
             onLoad={() => setLoaded(true)}
             onError={() => setFailed(true)}
-            className={`block ${rounded} transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+            className={`block ${rounded}`}
             style={{ width: "100%", height: "auto" }}
           />
         ) : (
@@ -124,7 +140,7 @@ export default function Thumb({
               onError={() => setFailed(true)}
               className="object-cover transition duration-700 hover:scale-[1.04]"
             />
-            {!loaded && (
+            {showShimmer && (
               <span aria-hidden className="shimmer-warm pointer-events-none absolute inset-0" />
             )}
           </>
