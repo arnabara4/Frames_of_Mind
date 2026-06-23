@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { timeAgo, type Comment } from "@/lib/types";
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const GMAIL = /^[a-zA-Z0-9._%+\-]+@gmail\.com$/i;
 const COLS = "id, blog_id, parent_id, author_name, body, created_at";
 
 /* ── Avatar ───────────────────────────────────────────────────────────── */
@@ -56,23 +56,37 @@ function CommentForm({
   onCancel?: () => void;
 }) {
   const isReply = parentId !== null;
+  const supabase = useMemo(() => createClient(), []);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [text, setText] = useState(initial);
-  const [website, setWebsite] = useState(""); // honeypot
+  const [website, setWebsite] = useState("");
   const [open, setOpen] = useState(isReply || autoFocus);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [lookingUp, setLookingUp] = useState(false);
 
-  // Remember the commenter locally so they don't retype name/email each time.
+  // Load saved identity from localStorage; verify with DB so returning
+  // commenters get their name auto-filled and locked immediately.
   useEffect(() => {
+    let active = true;
     try {
-      setName(localStorage.getItem("fom-comment-name") ?? "");
-      setEmail(localStorage.getItem("fom-comment-email") ?? "");
-    } catch {
-      /* ignore */
-    }
-  }, []);
+      const se = localStorage.getItem("fom-comment-email") ?? "";
+      const sn = localStorage.getItem("fom-comment-name") ?? "";
+      if (se) setEmail(se);
+      if (sn) setName(sn);
+      if (se && GMAIL.test(se)) {
+        setLookingUp(true);
+        supabase.rpc("get_commenter_name", { p_email: se }).then(({ data }) => {
+          if (!active) return;
+          setLookingUp(false);
+          if (data) { setName(data as string); setLocked(true); }
+        });
+      }
+    } catch { /* ignore */ }
+    return () => { active = false; };
+  }, [supabase]);
 
   function close() {
     setText("");
@@ -82,12 +96,29 @@ function CommentForm({
     else setOpen(false);
   }
 
+  // On email blur: look up the stored name for this Gmail address.
+  // Auto-fills and locks the name field so identity stays consistent.
+  async function fetchCommenterName(val: string) {
+    const v = val.trim().toLowerCase();
+    if (!GMAIL.test(v)) { setLocked(false); return; }
+    setLookingUp(true);
+    const { data } = await supabase.rpc("get_commenter_name", { p_email: v });
+    setLookingUp(false);
+    if (data) {
+      setName(data as string);
+      setLocked(true);
+      setErrors((prev) => ({ ...prev, name: "" }));
+    } else {
+      setLocked(false);
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const next: Record<string, string> = {};
-    if (!name.trim()) next.name = "Please add your name.";
-    if (!email.trim()) next.email = "Please add your email.";
-    else if (!EMAIL.test(email.trim())) next.email = "That email doesn't look right.";
+    if (!name.trim()) next.name = "Please add your display name.";
+    if (!email.trim()) next.email = "Please add your Gmail address.";
+    else if (!GMAIL.test(email.trim())) next.email = "Only Gmail addresses are accepted (@gmail.com).";
     if (!text.trim()) next.body = "Write something first.";
     setErrors(next);
     if (Object.keys(next).length) return;
@@ -114,7 +145,7 @@ function CommentForm({
         return;
       }
       try {
-        localStorage.setItem("fom-comment-name", name.trim());
+        localStorage.setItem("fom-comment-name", (data.canonical_name as string) || name.trim());
         localStorage.setItem("fom-comment-email", email.trim());
       } catch {
         /* ignore */
@@ -167,28 +198,46 @@ function CommentForm({
               className="overflow-hidden"
             >
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <div>
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your name"
-                    maxLength={60}
-                    aria-label="Your name"
-                    className={inputCls}
-                  />
-                  {errors.name && <p className="mt-1 text-xs text-coral">{errors.name}</p>}
-                </div>
+                {/* Email first — name auto-fills once the email is recognised */}
                 <div>
                   <input
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Your email (kept private)"
+                    onChange={(e) => { setEmail(e.target.value); setLocked(false); }}
+                    onBlur={(e) => fetchCommenterName(e.target.value)}
+                    placeholder="your@gmail.com"
                     type="email"
                     maxLength={160}
-                    aria-label="Your email"
+                    aria-label="Your Gmail"
                     className={inputCls}
                   />
                   {errors.email && <p className="mt-1 text-xs text-coral">{errors.email}</p>}
+                </div>
+                {/* Name — locked once identity is confirmed from the DB */}
+                <div>
+                  <div className="relative">
+                    <input
+                      value={lookingUp ? "" : name}
+                      onChange={(e) => { if (!locked) setName(e.target.value); }}
+                      placeholder={lookingUp ? "Looking up…" : "Your display name"}
+                      maxLength={60}
+                      aria-label="Your display name"
+                      readOnly={locked || lookingUp}
+                      className={`${inputCls} ${locked ? "cursor-default bg-maple/5 pr-20" : ""}`}
+                    />
+                    {locked && (
+                      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full bg-maple/15 px-2 py-0.5 font-serif text-[10px] italic text-maple/70">
+                        ✓ linked
+                      </span>
+                    )}
+                  </div>
+                  {locked && (
+                    <p className="mt-1 text-[11px] text-maple/60">
+                      Your name is linked to this email.
+                    </p>
+                  )}
+                  {!locked && errors.name && (
+                    <p className="mt-1 text-xs text-coral">{errors.name}</p>
+                  )}
                 </div>
               </div>
               <div className="mt-2 flex items-center justify-end gap-2">
@@ -251,24 +300,24 @@ function CommentRow({
           {owner && !confirm && (
             <button
               onClick={() => setConfirm(true)}
-              className="text-bark/35 transition hover:text-coral"
+              className="inline-flex items-center gap-1 text-bark/40 transition hover:text-maple"
             >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
               Delete
             </button>
           )}
           {owner && confirm && (
-            <span className="inline-flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-maple/25 bg-maple/5 px-2.5 py-1">
+              <span className="font-medium text-bark/70">Remove?</span>
               <button
-                onClick={() => {
-                  onDelete(comment.id);
-                  setConfirm(false);
-                }}
-                className="font-semibold text-coral"
+                onClick={() => { onDelete(comment.id); setConfirm(false); }}
+                className="font-bold text-coral hover:text-coral-dark"
               >
-                Delete?
+                Yes
               </button>
-              <button onClick={() => setConfirm(false)} className="text-bark/45">
-                Cancel
+              <span className="text-bark/30">·</span>
+              <button onClick={() => setConfirm(false)} className="text-bark/50 hover:text-bark">
+                No
               </button>
             </span>
           )}
